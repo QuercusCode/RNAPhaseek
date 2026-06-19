@@ -64,7 +64,7 @@ RNAPhaseek_scripts/
 ├── Functions/             # core importable package (model, data, FEGS, biophysics)
 ├── Data/                  # all corpora, splits, precomputed FEGS/biophysics (large)
 ├── model/                 # trained checkpoints + per-experiment eval summaries
-│   └── strict_eval_v6_production/   # ← THE final accepted model (final_model.pt, model_card.json)
+│   └── strict_eval_v13_production/  # ← production model card + RESULT.md (weights on HF Hub)
 ├── report_assets/         # report figures (fig1–fig23)
 ├── outputs/designs/       # generated candidate RNAs (designed_*.fasta)
 ├── docs/                  # comprehensive report (PDF) + CLI doc + next-steps
@@ -88,32 +88,33 @@ RNAPhaseek_scripts/
 
 | What | Where |
 |---|---|
-| Final model + model card | `model/strict_eval_v6_production/{final_model.pt, model_card.json}` |
-| Strict positive corpus (1,352) | `Data/raw/multispecies/strict_pool_v5_positives.fasta` |
+| Production model card | `model/strict_eval_v13_production/{model_card.json, RESULT.md}` |
+| Model weights (426 MB) | [Hugging Face Hub](https://huggingface.co/) — published separately, fetched by the Colab |
+| Strict positive corpus (1,352) | archived to `/Volumes/LaCie/RNAPhaseek_scripts/Data/raw/multispecies/strict_pool_v5_positives.fasta` |
 | Candidate designs (wet-lab panel) | `outputs/designs/designed_ga_v6.fasta`, `designed_den_v6.fasta` |
 | Comprehensive report (19 pp) | `docs/RNAPhaseek_Comprehensive_Report.pdf` |
-| Reproduce the report | `python scripts/reporting/make_full_report.py` |
+| Reproduce the report | run `scripts/reporting/make_full_report.py` from `/Volumes/LaCie/RNAPhaseek_scripts/` (needs the archived CV summaries) |
 
-## Storage layout (internal lean + external archive)
+## Storage layout (lean local + LaCie archive)
 
-To keep the internal disk free, the **278 GB regenerable FEGS cache lives on the external
-LaCie**, with a full project archive there too:
+Only the v13 production checkpoint is kept locally (`model/strict_eval_v13_production/`,
+~426 MB). Everything else — older training checkpoints, raw FASTA corpora, training-time
+splits — lives on an external archive at `/Volumes/LaCie/RNAPhaseek_scripts/` (~15 GiB).
 
-- **`Data/processed/` is a symlink** → `/Volumes/LaCie/RNAPhaseek_scripts/Data/processed`
-  (the precomputed FEGS matrices — large, regenerable).
-- Everything else (model, code, raw FASTAs, splits, docs) is **on the internal disk** (~14 GB).
+What this means in practice:
 
-What this means:
-- **Using the model — always works, even with the LaCie unplugged.** `rnaphaseek score/design/validate`
-  computes FEGS on the fly and never touches the cache.
-- **Re-training — needs the LaCie plugged in** (the symlink reads the cached FEGS from it). If the drive
-  is absent, regenerate the cache from the FASTAs instead:
-  `python scripts/data_prep/precompute_v5_features.py` (and `precompute_v4_features.py`).
-- The external also holds a **complete, runnable copy** of the whole project at
-  `/Volumes/LaCie/RNAPhaseek_scripts/` (relocatable — paths derive from file location).
+- **Default inference (`score`, `design`, `validate`) works fully offline** — the v13 weights
+  are local and biophysical / FEGS features are computed on the fly from input.
+- **Uncertainty mode (`--uncertainty`) and full-length MIL (`--long-model mil`)** need the
+  additional v6, v6-organism-balanced, and v7-MIL checkpoints. They are resolved at run
+  time via `--ensemble-from <root>` or the `RNAPHASEEK_ENSEMBLE_ROOT` environment variable;
+  the default points at `/Volumes/LaCie/RNAPhaseek_scripts/model`.
+- **Retraining** also needs the LaCie archive (it holds the raw FASTAs and pre-computed
+  splits). Run training scripts from the archive copy, or symlink the missing dirs into
+  the local repo.
 
-> Note: the external is exFAT (not journaled). It's the archive, not the only copy of anything
-> irreplaceable — the model, code, and raw FASTAs all live on the internal disk too.
+A friendly error message lists the missing files if `--uncertainty` / `--long-model mil` is
+invoked without the archive mounted.
 
 ## The model in one paragraph
 
