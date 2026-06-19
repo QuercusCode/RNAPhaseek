@@ -1,0 +1,118 @@
+{
+  "phase1_pool": {
+    "positives": 4424,
+    "negatives": 3016,
+    "sources": [
+      "RPS 2.0 (RNAPhaSep-Score)",
+      "ParkerSG (stress-granule pulldown)",
+      "smOOPs (Ivanov 2025)",
+      "RNAPhaSep"
+    ]
+  },
+  "multispecies_positives": {
+    "mouse": 1825,
+    "yeast": 198,
+    "celegans": 2017,
+    "drosophila": 543,
+    "viral": 20,
+    "spombe": 90,
+    "arabidopsis": 359,
+    "rice": 69
+  },
+  "unified_pool": {
+    "positives": {
+      "human": 2318,
+      "mouse": 2822,
+      "yeast": 218,
+      "celegans": 1966,
+      "virus": 40,
+      "arabidopsis": 355,
+      "zebrafish": 2,
+      "drosophila": 548,
+      "xenopus": 3,
+      "spombe": 90,
+      "rice": 69
+    },
+    "negatives": {
+      "human": 2999,
+      "mouse": 1663,
+      "yeast": 195,
+      "celegans": 1996,
+      "drosophila": 527,
+      "spombe": 90,
+      "arabidopsis": 358,
+      "rice": 69
+    },
+    "totals": {
+      "positives": 8431,
+      "negatives": 7897
+    }
+  },
+  "strict_pool": {
+    "positives": 461,
+    "matched_negatives": 461,
+    "hard_negatives": 17,
+    "species_breakdown": {
+      "human": 283,
+      "mouse": 32,
+      "yeast": 45,
+      "celegans": 31,
+      "virus": 40,
+      "arabidopsis": 2,
+      "zebrafish": 2,
+      "drosophila": 12,
+      "xenopus": 3,
+      "spombe": 5,
+      "unknown": 6
+    }
+  },
+  "curation_pass1": {
+    "total_candidates": 67,
+    "confirmed": 38,
+    "refuted": 29,
+    "by_category": {
+      "lncrna": 3,
+      "repeat": 11,
+      "designed": 15,
+      "utr": 3,
+      "g4": 3,
+      "other": 3
+    },
+    "by_grade": {
+      "B_in_vivo_scaffold": 1,
+      "C_repeat_or_designed": 17,
+      "A_in_vitro_rna_only": 20
+    }
+  },
+  "curation_rechase": {
+    "leads": 21,
+    "promoted": 1,
+    "still_refuted": 20
+  },
+  "reference_transcriptomes": [
+    "caenorhabditis_elegans_cdna.fa.gz",
+    "mus_musculus_cdna.fa.gz",
+    "schizosaccharomyces_pombe_cdna.fa.gz",
+    "drosophila_melanogaster_cdna.fa.gz",
+    "arabidopsis_thaliana_cdna.fa.gz",
+    "saccharomyces_cerevisiae_cdna.fa.gz",
+    "oryza_sativa_cdna.fa.gz"
+  ],
+  "diagnostic_strict_baseline": {
+    "val_easy_auroc": 0.628,
+    "val_full_auroc": 0.627,
+    "separability_full_pool": {
+      "pos_vs_matched": 0.741,
+      "pos_vs_TERRA": 0.998,
+      "pos_vs_subthreshold": 0.585,
+      "pos_vs_shuffle": 0.503
+    },
+    "mean_prob": {
+      "positives": 0.671,
+      "matched_neg": 0.455,
+      "hard_TERRA": 0.145,
+      "hard_subthreshold": 0.608,
+      "hard_shuffle": 0.649
+    }
+  }
+}

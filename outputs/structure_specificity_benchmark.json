@@ -1,0 +1,1431 @@
+{
+  "v6_production": {
+    "ckpt": "model/strict_eval_v6_production/final_model.pt",
+    "n_pos": 10,
+    "n_neg": 8,
+    "n_soft": 8,
+    "hard18_auroc": 0.6125,
+    "pos_recall@0.5": 0.9,
+    "neg_fp@0.5": 1.0,
+    "neg_mean": 0.8866740465164185,
+    "matched_pair_accuracy": 0.6666666666666666,
+    "matched_pair_mean_margin": 0.0017308990160624187,
+    "pairs": [
+      {
+        "pos": "5pA9",
+        "neg": "5pC9",
+        "prob_pos": 0.9047818779945374,
+        "prob_neg": 0.9162697196006775,
+        "margin": -0.011487841606140137,
+        "correct": false,
+        "mechanism": "5'-flank A9 condenses vs C9 (C9 base-pairs the G-core -> no LLPS)"
+      },
+      {
+        "pos": "5pmixed",
+        "neg": "5pC9",
+        "prob_pos": 0.7785603404045105,
+        "prob_neg": 0.9162697196006775,
+        "margin": -0.137709379196167,
+        "correct": false,
+        "mechanism": "5'-flank ACAGU5 condenses vs C9"
+      },
+      {
+        "pos": "3pA9",
+        "neg": "3pC9",
+        "prob_pos": 0.8916524052619934,
+        "prob_neg": 0.8865669965744019,
+        "margin": 0.005085408687591553,
+        "correct": true,
+        "mechanism": "3'-flank A9 condenses vs C9 (no aggregates)"
+      },
+      {
+        "pos": "3pA9",
+        "neg": "3pU9",
+        "prob_pos": 0.8916524052619934,
+        "prob_neg": 0.8039599061012268,
+        "margin": 0.0876924991607666,
+        "correct": true,
+        "mechanism": "3'-flank A9 condenses vs U9 (no aggregates)"
+      },
+      {
+        "pos": "3pmixed",
+        "neg": "3pC9",
+        "prob_pos": 0.8717121481895447,
+        "prob_neg": 0.8865669965744019,
+        "margin": -0.014854848384857178,
+        "correct": false,
+        "mechanism": "3'-flank ACAGU5 vs C9"
+      },
+      {
+        "pos": "5pA9",
+        "neg": "dual_U9",
+        "prob_pos": 0.9047818779945374,
+        "prob_neg": 0.8669359087944031,
+        "margin": 0.03784596920013428,
+        "correct": true,
+        "mechanism": "single A9 flank vs dual-U9 flank (no LLPS)"
+      },
+      {
+        "pos": "G3A2_4",
+        "neg": "G2A2_4",
+        "prob_pos": 0.9500272870063782,
+        "prob_neg": 0.9481219053268433,
+        "margin": 0.0019053816795349121,
+        "correct": true,
+        "mechanism": "G-tract: 4xG3 (LLPS) vs 4xG2 (soluble at physiol. spermine)"
+      },
+      {
+        "pos": "G3A2_4",
+        "neg": "G3A5_4",
+        "prob_pos": 0.9500272870063782,
+        "prob_neg": 0.9237968921661377,
+        "margin": 0.02623039484024048,
+        "correct": true,
+        "mechanism": "spacer: A2 (LLPS) vs A5 (aggregation abolished)"
+      },
+      {
+        "pos": "A3_G3A2_4_A",
+        "neg": "G3A5_4",
+        "prob_pos": 0.944667398929596,
+        "prob_neg": 0.9237968921661377,
+        "margin": 0.020870506763458252,
+        "correct": true,
+        "mechanism": "poly-A-flanked G3 core (LLPS) vs A5-spacer soluble"
+      }
+    ],
+    "per_seq": {
+      "G3A_4": {
+        "label": "POS",
+        "prob": 0.9657771587371826
+      },
+      "G3A2_4": {
+        "label": "POS",
+        "prob": 0.9500272870063782
+      },
+      "A3_G3A2_4_A": {
+        "label": "POS",
+        "prob": 0.944667398929596
+      },
+      "G3332": {
+        "label": "POS",
+        "prob": 0.9472541213035583
+      },
+      "G3323": {
+        "label": "POS",
+        "prob": 0.9494653344154358
+      },
+      "5pmixed": {
+        "label": "POS",
+        "prob": 0.7785603404045105
+      },
+      "5pA9": {
+        "label": "POS",
+        "prob": 0.9047818779945374
+      },
+      "3pmixed": {
+        "label": "POS",
+        "prob": 0.8717121481895447
+      },
+      "3pA9": {
+        "label": "POS",
+        "prob": 0.8916524052619934
+      },
+      "2CZ": {
+        "label": "POS",
+        "prob": 0.013992629945278168
+      },
+      "G3A5_4": {
+        "label": "NEG",
+        "prob": 0.9237968921661377
+      },
+      "G2A2_4": {
+        "label": "NEG",
+        "prob": 0.9481219053268433
+      },
+      "5pC9": {
+        "label": "NEG",
+        "prob": 0.9162697196006775
+      },
+      "3pC9": {
+        "label": "NEG",
+        "prob": 0.8865669965744019
+      },
+      "3pU9": {
+        "label": "NEG",
+        "prob": 0.8039599061012268
+      },
+      "dual_U9": {
+        "label": "NEG",
+        "prob": 0.8669359087944031
+      },
+      "mixed25_sense": {
+        "label": "NEG",
+        "prob": 0.8233528137207031
+      },
+      "mixed25_antisense": {
+        "label": "NEG",
+        "prob": 0.9243878722190857
+      },
+      "G3A3_4": {
+        "label": "SOFT",
+        "prob": 0.9497438669204712
+      },
+      "G3322": {
+        "label": "SOFT",
+        "prob": 0.9454378485679626
+      },
+      "G2322": {
+        "label": "SOFT",
+        "prob": 0.943061888217926
+      },
+      "5pU9": {
+        "label": "SOFT",
+        "prob": 0.7161875367164612
+      },
+      "NRAS": {
+        "label": "SOFT",
+        "prob": 0.9247748851776123
+      },
+      "dual_mixed": {
+        "label": "SOFT",
+        "prob": 0.916131854057312
+      },
+      "dual_A9": {
+        "label": "SOFT",
+        "prob": 0.8064906001091003
+      },
+      "CZ": {
+        "label": "SOFT",
+        "prob": 0.023556074127554893
+      }
+    }
+  },
+  "v12_ernie": {
+    "ckpt": "model/strict_eval_v12_ernie_production/final_model.pt",
+    "backbone": "multimolecule/ernierna",
+    "ensemble_with": null,
+    "n_pos": 10,
+    "n_neg": 8,
+    "n_soft": 8,
+    "hard18_auroc": 0.6125,
+    "pos_recall@0.5": 1.0,
+    "neg_fp@0.5": 1.0,
+    "neg_mean": 0.946080207824707,
+    "matched_pair_accuracy": 0.4444444444444444,
+    "matched_pair_mean_margin": 0.0014607045385572645,
+    "ensemble": null,
+    "pairs": [
+      {
+        "pos": "5pA9",
+        "neg": "5pC9",
+        "prob_pos": 0.9460124373435974,
+        "prob_neg": 0.9496364593505859,
+        "margin": -0.0036240220069885254,
+        "correct": false,
+        "mechanism": "5'-flank A9 condenses vs C9 (C9 base-pairs the G-core -> no LLPS)"
+      },
+      {
+        "pos": "5pmixed",
+        "neg": "5pC9",
+        "prob_pos": 0.9600505828857422,
+        "prob_neg": 0.9496364593505859,
+        "margin": 0.01041412353515625,
+        "correct": true,
+        "mechanism": "5'-flank ACAGU5 condenses vs C9"
+      },
+      {
+        "pos": "3pA9",
+        "neg": "3pC9",
+        "prob_pos": 0.9331738948822021,
+        "prob_neg": 0.9590606093406677,
+        "margin": -0.025886714458465576,
+        "correct": false,
+        "mechanism": "3'-flank A9 condenses vs C9 (no aggregates)"
+      },
+      {
+        "pos": "3pA9",
+        "neg": "3pU9",
+        "prob_pos": 0.9331738948822021,
+        "prob_neg": 0.9455215930938721,
+        "margin": -0.012347698211669922,
+        "correct": false,
+        "mechanism": "3'-flank A9 condenses vs U9 (no aggregates)"
+      },
+      {
+        "pos": "3pmixed",
+        "neg": "3pC9",
+        "prob_pos": 0.956122875213623,
+        "prob_neg": 0.9590606093406677,
+        "margin": -0.0029377341270446777,
+        "correct": false,
+        "mechanism": "3'-flank ACAGU5 vs C9"
+      },
+      {
+        "pos": "5pA9",
+        "neg": "dual_U9",
+        "prob_pos": 0.9460124373435974,
+        "prob_neg": 0.9470782279968262,
+        "margin": -0.0010657906532287598,
+        "correct": false,
+        "mechanism": "single A9 flank vs dual-U9 flank (no LLPS)"
+      },
+      {
+        "pos": "G3A2_4",
+        "neg": "G2A2_4",
+        "prob_pos": 0.9546453356742859,
+        "prob_neg": 0.9510816931724548,
+        "margin": 0.0035636425018310547,
+        "correct": true,
+        "mechanism": "G-tract: 4xG3 (LLPS) vs 4xG2 (soluble at physiol. spermine)"
+      },
+      {
+        "pos": "G3A2_4",
+        "neg": "G3A5_4",
+        "prob_pos": 0.9546453356742859,
+        "prob_neg": 0.9328191876411438,
+        "margin": 0.02182614803314209,
+        "correct": true,
+        "mechanism": "spacer: A2 (LLPS) vs A5 (aggregation abolished)"
+      },
+      {
+        "pos": "A3_G3A2_4_A",
+        "neg": "G3A5_4",
+        "prob_pos": 0.9560235738754272,
+        "prob_neg": 0.9328191876411438,
+        "margin": 0.023204386234283447,
+        "correct": true,
+        "mechanism": "poly-A-flanked G3 core (LLPS) vs A5-spacer soluble"
+      }
+    ],
+    "per_seq": {
+      "G3A_4": {
+        "label": "POS",
+        "prob": 0.956825852394104
+      },
+      "G3A2_4": {
+        "label": "POS",
+        "prob": 0.9546453356742859
+      },
+      "A3_G3A2_4_A": {
+        "label": "POS",
+        "prob": 0.9560235738754272
+      },
+      "G3332": {
+        "label": "POS",
+        "prob": 0.9480383396148682
+      },
+      "G3323": {
+        "label": "POS",
+        "prob": 0.9429168701171875
+      },
+      "5pmixed": {
+        "label": "POS",
+        "prob": 0.9600505828857422
+      },
+      "5pA9": {
+        "label": "POS",
+        "prob": 0.9460124373435974
+      },
+      "3pmixed": {
+        "label": "POS",
+        "prob": 0.956122875213623
+      },
+      "3pA9": {
+        "label": "POS",
+        "prob": 0.9331738948822021
+      },
+      "2CZ": {
+        "label": "POS",
+        "prob": 0.9449113011360168
+      },
+      "G3A5_4": {
+        "label": "NEG",
+        "prob": 0.9328191876411438
+      },
+      "G2A2_4": {
+        "label": "NEG",
+        "prob": 0.9510816931724548
+      },
+      "5pC9": {
+        "label": "NEG",
+        "prob": 0.9496364593505859
+      },
+      "3pC9": {
+        "label": "NEG",
+        "prob": 0.9590606093406677
+      },
+      "3pU9": {
+        "label": "NEG",
+        "prob": 0.9455215930938721
+      },
+      "dual_U9": {
+        "label": "NEG",
+        "prob": 0.9470782279968262
+      },
+      "mixed25_sense": {
+        "label": "NEG",
+        "prob": 0.9316959977149963
+      },
+      "mixed25_antisense": {
+        "label": "NEG",
+        "prob": 0.951747715473175
+      },
+      "G3A3_4": {
+        "label": "SOFT",
+        "prob": 0.9552070498466492
+      },
+      "G3322": {
+        "label": "SOFT",
+        "prob": 0.9389938712120056
+      },
+      "G2322": {
+        "label": "SOFT",
+        "prob": 0.9426237940788269
+      },
+      "5pU9": {
+        "label": "SOFT",
+        "prob": 0.9421861171722412
+      },
+      "NRAS": {
+        "label": "SOFT",
+        "prob": 0.9434410333633423
+      },
+      "dual_mixed": {
+        "label": "SOFT",
+        "prob": 0.9605294466018677
+      },
+      "dual_A9": {
+        "label": "SOFT",
+        "prob": 0.9234397411346436
+      },
+      "CZ": {
+        "label": "SOFT",
+        "prob": 0.192485973238945
+      }
+    }
+  },
+  "ensemble_v6_ernie": {
+    "ckpt": "model/strict_eval_v6_production/final_model.pt",
+    "backbone": "multimolecule/rnafm",
+    "ensemble_with": "multimolecule/ernierna",
+    "n_pos": 10,
+    "n_neg": 8,
+    "n_soft": 8,
+    "hard18_auroc": 0.6125,
+    "pos_recall@0.5": 0.9,
+    "neg_fp@0.5": 1.0,
+    "neg_mean": 0.9232971668243408,
+    "matched_pair_accuracy": 0.6666666666666666,
+    "matched_pair_mean_margin": 0.001175522804260254,
+    "ensemble": {
+      "mean_abs_dprob": 0.13143455982208252,
+      "neg_mean_abs_dprob": 0.07324635982513428,
+      "neg_abstain_rate@0.05": 0.5
+    },
+    "pairs": [
+      {
+        "pos": "5pA9",
+        "neg": "5pC9",
+        "prob_pos": 0.9316606521606445,
+        "prob_neg": 0.9383660554885864,
+        "margin": -0.0067054033279418945,
+        "correct": false,
+        "mechanism": "5'-flank A9 condenses vs C9 (C9 base-pairs the G-core -> no LLPS)"
+      },
+      {
+        "pos": "5pmixed",
+        "neg": "5pC9",
+        "prob_pos": 0.8698053359985352,
+        "prob_neg": 0.9383660554885864,
+        "margin": -0.06856071949005127,
+        "correct": false,
+        "mechanism": "5'-flank ACAGU5 condenses vs C9"
+      },
+      {
+        "pos": "3pA9",
+        "neg": "3pC9",
+        "prob_pos": 0.924976110458374,
+        "prob_neg": 0.9236027002334595,
+        "margin": 0.0013734102249145508,
+        "correct": true,
+        "mechanism": "3'-flank A9 condenses vs C9 (no aggregates)"
+      },
+      {
+        "pos": "3pA9",
+        "neg": "3pU9",
+        "prob_pos": 0.924976110458374,
+        "prob_neg": 0.8798673152923584,
+        "margin": 0.045108795166015625,
+        "correct": true,
+        "mechanism": "3'-flank A9 condenses vs U9 (no aggregates)"
+      },
+      {
+        "pos": "3pmixed",
+        "neg": "3pC9",
+        "prob_pos": 0.9170798063278198,
+        "prob_neg": 0.9236027002334595,
+        "margin": -0.0065228939056396484,
+        "correct": false,
+        "mechanism": "3'-flank ACAGU5 vs C9"
+      },
+      {
+        "pos": "5pA9",
+        "neg": "dual_U9",
+        "prob_pos": 0.9316606521606445,
+        "prob_neg": 0.9120798707008362,
+        "margin": 0.01958078145980835,
+        "correct": true,
+        "mechanism": "single A9 flank vs dual-U9 flank (no LLPS)"
+      },
+      {
+        "pos": "G3A2_4",
+        "neg": "G2A2_4",
+        "prob_pos": 0.9554680585861206,
+        "prob_neg": 0.9546244740486145,
+        "margin": 0.0008435845375061035,
+        "correct": true,
+        "mechanism": "G-tract: 4xG3 (LLPS) vs 4xG2 (soluble at physiol. spermine)"
+      },
+      {
+        "pos": "G3A2_4",
+        "neg": "G3A5_4",
+        "prob_pos": 0.9554680585861206,
+        "prob_neg": 0.9412592649459839,
+        "margin": 0.014208793640136719,
+        "correct": true,
+        "mechanism": "spacer: A2 (LLPS) vs A5 (aggregation abolished)"
+      },
+      {
+        "pos": "A3_G3A2_4_A",
+        "neg": "G3A5_4",
+        "prob_pos": 0.9525126218795776,
+        "prob_neg": 0.9412592649459839,
+        "margin": 0.01125335693359375,
+        "correct": true,
+        "mechanism": "poly-A-flanked G3 core (LLPS) vs A5-spacer soluble"
+      }
+    ],
+    "per_seq": {
+      "G3A_4": {
+        "label": "POS",
+        "prob": 0.9654041528701782
+      },
+      "G3A2_4": {
+        "label": "POS",
+        "prob": 0.9554680585861206
+      },
+      "A3_G3A2_4_A": {
+        "label": "POS",
+        "prob": 0.9525126218795776
+      },
+      "G3332": {
+        "label": "POS",
+        "prob": 0.9540543556213379
+      },
+      "G3323": {
+        "label": "POS",
+        "prob": 0.9550815224647522
+      },
+      "5pmixed": {
+        "label": "POS",
+        "prob": 0.8698053359985352
+      },
+      "5pA9": {
+        "label": "POS",
+        "prob": 0.9316606521606445
+      },
+      "3pmixed": {
+        "label": "POS",
+        "prob": 0.9170798063278198
+      },
+      "3pA9": {
+        "label": "POS",
+        "prob": 0.924976110458374
+      },
+      "2CZ": {
+        "label": "POS",
+        "prob": 0.4840811789035797
+      },
+      "G3A5_4": {
+        "label": "NEG",
+        "prob": 0.9412592649459839
+      },
+      "G2A2_4": {
+        "label": "NEG",
+        "prob": 0.9546244740486145
+      },
+      "5pC9": {
+        "label": "NEG",
+        "prob": 0.9383660554885864
+      },
+      "3pC9": {
+        "label": "NEG",
+        "prob": 0.9236027002334595
+      },
+      "3pU9": {
+        "label": "NEG",
+        "prob": 0.8798673152923584
+      },
+      "dual_U9": {
+        "label": "NEG",
+        "prob": 0.9120798707008362
+      },
+      "mixed25_sense": {
+        "label": "NEG",
+        "prob": 0.8907628059387207
+      },
+      "mixed25_antisense": {
+        "label": "NEG",
+        "prob": 0.9458149671554565
+      },
+      "G3A3_4": {
+        "label": "SOFT",
+        "prob": 0.9550926089286804
+      },
+      "G3322": {
+        "label": "SOFT",
+        "prob": 0.9529755115509033
+      },
+      "G2322": {
+        "label": "SOFT",
+        "prob": 0.9516922831535339
+      },
+      "5pU9": {
+        "label": "SOFT",
+        "prob": 0.8357805013656616
+      },
+      "NRAS": {
+        "label": "SOFT",
+        "prob": 0.9418405294418335
+      },
+      "dual_mixed": {
+        "label": "SOFT",
+        "prob": 0.9378031492233276
+      },
+      "dual_A9": {
+        "label": "SOFT",
+        "prob": 0.8825092315673828
+      },
+      "CZ": {
+        "label": "SOFT",
+        "prob": 0.4903753101825714
+      }
+    }
+  },
+  "v13_matchedpairs": {
+    "ckpt": "model/strict_eval_v13_production/final_model.pt",
+    "backbone": "multimolecule/rnafm",
+    "ensemble_with": null,
+    "n_pos": 10,
+    "n_neg": 8,
+    "n_soft": 8,
+    "hard18_auroc": 0.8125,
+    "pos_recall@0.5": 0.9,
+    "neg_fp@0.5": 1.0,
+    "neg_mean": 0.8293365836143494,
+    "matched_pair_accuracy": 1.0,
+    "matched_pair_mean_margin": 0.12992984056472778,
+    "ensemble": null,
+    "pairs": [
+      {
+        "pos": "5pA9",
+        "neg": "5pC9",
+        "prob_pos": 0.9425352215766907,
+        "prob_neg": 0.6932424306869507,
+        "margin": 0.24929279088974,
+        "correct": true,
+        "mechanism": "5'-flank A9 condenses vs C9 (C9 base-pairs the G-core -> no LLPS)"
+      },
+      {
+        "pos": "5pmixed",
+        "neg": "5pC9",
+        "prob_pos": 0.9217756390571594,
+        "prob_neg": 0.6932424306869507,
+        "margin": 0.22853320837020874,
+        "correct": true,
+        "mechanism": "5'-flank ACAGU5 condenses vs C9"
+      },
+      {
+        "pos": "3pA9",
+        "neg": "3pC9",
+        "prob_pos": 0.9397577047348022,
+        "prob_neg": 0.7331148386001587,
+        "margin": 0.20664286613464355,
+        "correct": true,
+        "mechanism": "3'-flank A9 condenses vs C9 (no aggregates)"
+      },
+      {
+        "pos": "3pA9",
+        "neg": "3pU9",
+        "prob_pos": 0.9397577047348022,
+        "prob_neg": 0.7677197456359863,
+        "margin": 0.17203795909881592,
+        "correct": true,
+        "mechanism": "3'-flank A9 condenses vs U9 (no aggregates)"
+      },
+      {
+        "pos": "3pmixed",
+        "neg": "3pC9",
+        "prob_pos": 0.9133937358856201,
+        "prob_neg": 0.7331148386001587,
+        "margin": 0.18027889728546143,
+        "correct": true,
+        "mechanism": "3'-flank ACAGU5 vs C9"
+      },
+      {
+        "pos": "5pA9",
+        "neg": "dual_U9",
+        "prob_pos": 0.9425352215766907,
+        "prob_neg": 0.8726867437362671,
+        "margin": 0.06984847784042358,
+        "correct": true,
+        "mechanism": "single A9 flank vs dual-U9 flank (no LLPS)"
+      },
+      {
+        "pos": "G3A2_4",
+        "neg": "G2A2_4",
+        "prob_pos": 0.9680107831954956,
+        "prob_neg": 0.9633541703224182,
+        "margin": 0.004656612873077393,
+        "correct": true,
+        "mechanism": "G-tract: 4xG3 (LLPS) vs 4xG2 (soluble at physiol. spermine)"
+      },
+      {
+        "pos": "G3A2_4",
+        "neg": "G3A5_4",
+        "prob_pos": 0.9680107831954956,
+        "prob_neg": 0.9377049207687378,
+        "margin": 0.030305862426757812,
+        "correct": true,
+        "mechanism": "spacer: A2 (LLPS) vs A5 (aggregation abolished)"
+      },
+      {
+        "pos": "A3_G3A2_4_A",
+        "neg": "G3A5_4",
+        "prob_pos": 0.9654768109321594,
+        "prob_neg": 0.9377049207687378,
+        "margin": 0.02777189016342163,
+        "correct": true,
+        "mechanism": "poly-A-flanked G3 core (LLPS) vs A5-spacer soluble"
+      }
+    ],
+    "per_seq": {
+      "G3A_4": {
+        "label": "POS",
+        "prob": 0.9761221408843994
+      },
+      "G3A2_4": {
+        "label": "POS",
+        "prob": 0.9680107831954956
+      },
+      "A3_G3A2_4_A": {
+        "label": "POS",
+        "prob": 0.9654768109321594
+      },
+      "G3332": {
+        "label": "POS",
+        "prob": 0.9674955010414124
+      },
+      "G3323": {
+        "label": "POS",
+        "prob": 0.9680221676826477
+      },
+      "5pmixed": {
+        "label": "POS",
+        "prob": 0.9217756390571594
+      },
+      "5pA9": {
+        "label": "POS",
+        "prob": 0.9425352215766907
+      },
+      "3pmixed": {
+        "label": "POS",
+        "prob": 0.9133937358856201
+      },
+      "3pA9": {
+        "label": "POS",
+        "prob": 0.9397577047348022
+      },
+      "2CZ": {
+        "label": "POS",
+        "prob": 0.06786344200372696
+      },
+      "G3A5_4": {
+        "label": "NEG",
+        "prob": 0.9377049207687378
+      },
+      "G2A2_4": {
+        "label": "NEG",
+        "prob": 0.9633541703224182
+      },
+      "5pC9": {
+        "label": "NEG",
+        "prob": 0.6932424306869507
+      },
+      "3pC9": {
+        "label": "NEG",
+        "prob": 0.7331148386001587
+      },
+      "3pU9": {
+        "label": "NEG",
+        "prob": 0.7677197456359863
+      },
+      "dual_U9": {
+        "label": "NEG",
+        "prob": 0.8726867437362671
+      },
+      "mixed25_sense": {
+        "label": "NEG",
+        "prob": 0.7516121864318848
+      },
+      "mixed25_antisense": {
+        "label": "NEG",
+        "prob": 0.915257453918457
+      },
+      "G3A3_4": {
+        "label": "SOFT",
+        "prob": 0.9689984321594238
+      },
+      "G3322": {
+        "label": "SOFT",
+        "prob": 0.9658035039901733
+      },
+      "G2322": {
+        "label": "SOFT",
+        "prob": 0.9675346612930298
+      },
+      "5pU9": {
+        "label": "SOFT",
+        "prob": 0.7838521599769592
+      },
+      "NRAS": {
+        "label": "SOFT",
+        "prob": 0.8990933895111084
+      },
+      "dual_mixed": {
+        "label": "SOFT",
+        "prob": 0.9451558589935303
+      },
+      "dual_A9": {
+        "label": "SOFT",
+        "prob": 0.8493313789367676
+      },
+      "CZ": {
+        "label": "SOFT",
+        "prob": 0.6743958592414856
+      }
+    }
+  },
+  "v14_matchedpairs_scaled": {
+    "ckpt": "model/strict_eval_v14_production/final_model.pt",
+    "backbone": "multimolecule/rnafm",
+    "ensemble_with": null,
+    "n_pos": 10,
+    "n_neg": 8,
+    "n_soft": 8,
+    "hard18_auroc": 0.7625000000000001,
+    "pos_recall@0.5": 0.9,
+    "neg_fp@0.5": 0.625,
+    "neg_mean": 0.6771131753921509,
+    "matched_pair_accuracy": 0.8888888888888888,
+    "matched_pair_mean_margin": 0.35226740108595955,
+    "ensemble": null,
+    "pairs": [
+      {
+        "pos": "5pA9",
+        "neg": "5pC9",
+        "prob_pos": 0.9522033929824829,
+        "prob_neg": 0.27075129747390747,
+        "margin": 0.6814520955085754,
+        "correct": true,
+        "mechanism": "5'-flank A9 condenses vs C9 (C9 base-pairs the G-core -> no LLPS)"
+      },
+      {
+        "pos": "5pmixed",
+        "neg": "5pC9",
+        "prob_pos": 0.9448186159133911,
+        "prob_neg": 0.27075129747390747,
+        "margin": 0.6740673184394836,
+        "correct": true,
+        "mechanism": "5'-flank ACAGU5 condenses vs C9"
+      },
+      {
+        "pos": "3pA9",
+        "neg": "3pC9",
+        "prob_pos": 0.9410287737846375,
+        "prob_neg": 0.449813574552536,
+        "margin": 0.49121519923210144,
+        "correct": true,
+        "mechanism": "3'-flank A9 condenses vs C9 (no aggregates)"
+      },
+      {
+        "pos": "3pA9",
+        "neg": "3pU9",
+        "prob_pos": 0.9410287737846375,
+        "prob_neg": 0.8516582250595093,
+        "margin": 0.08937054872512817,
+        "correct": true,
+        "mechanism": "3'-flank A9 condenses vs U9 (no aggregates)"
+      },
+      {
+        "pos": "3pmixed",
+        "neg": "3pC9",
+        "prob_pos": 0.9463207125663757,
+        "prob_neg": 0.449813574552536,
+        "margin": 0.4965071380138397,
+        "correct": true,
+        "mechanism": "3'-flank ACAGU5 vs C9"
+      },
+      {
+        "pos": "5pA9",
+        "neg": "dual_U9",
+        "prob_pos": 0.9522033929824829,
+        "prob_neg": 0.25265756249427795,
+        "margin": 0.699545830488205,
+        "correct": true,
+        "mechanism": "single A9 flank vs dual-U9 flank (no LLPS)"
+      },
+      {
+        "pos": "G3A2_4",
+        "neg": "G2A2_4",
+        "prob_pos": 0.9663148522377014,
+        "prob_neg": 0.9677849411964417,
+        "margin": -0.0014700889587402344,
+        "correct": false,
+        "mechanism": "G-tract: 4xG3 (LLPS) vs 4xG2 (soluble at physiol. spermine)"
+      },
+      {
+        "pos": "G3A2_4",
+        "neg": "G3A5_4",
+        "prob_pos": 0.9663148522377014,
+        "prob_neg": 0.9483458995819092,
+        "margin": 0.017968952655792236,
+        "correct": true,
+        "mechanism": "spacer: A2 (LLPS) vs A5 (aggregation abolished)"
+      },
+      {
+        "pos": "A3_G3A2_4_A",
+        "neg": "G3A5_4",
+        "prob_pos": 0.9700955152511597,
+        "prob_neg": 0.9483458995819092,
+        "margin": 0.02174961566925049,
+        "correct": true,
+        "mechanism": "poly-A-flanked G3 core (LLPS) vs A5-spacer soluble"
+      }
+    ],
+    "per_seq": {
+      "G3A_4": {
+        "label": "POS",
+        "prob": 0.9654569029808044
+      },
+      "G3A2_4": {
+        "label": "POS",
+        "prob": 0.9663148522377014
+      },
+      "A3_G3A2_4_A": {
+        "label": "POS",
+        "prob": 0.9700955152511597
+      },
+      "G3332": {
+        "label": "POS",
+        "prob": 0.9614338874816895
+      },
+      "G3323": {
+        "label": "POS",
+        "prob": 0.9647740125656128
+      },
+      "5pmixed": {
+        "label": "POS",
+        "prob": 0.9448186159133911
+      },
+      "5pA9": {
+        "label": "POS",
+        "prob": 0.9522033929824829
+      },
+      "3pmixed": {
+        "label": "POS",
+        "prob": 0.9463207125663757
+      },
+      "3pA9": {
+        "label": "POS",
+        "prob": 0.9410287737846375
+      },
+      "2CZ": {
+        "label": "POS",
+        "prob": 0.12299050390720367
+      },
+      "G3A5_4": {
+        "label": "NEG",
+        "prob": 0.9483458995819092
+      },
+      "G2A2_4": {
+        "label": "NEG",
+        "prob": 0.9677849411964417
+      },
+      "5pC9": {
+        "label": "NEG",
+        "prob": 0.27075129747390747
+      },
+      "3pC9": {
+        "label": "NEG",
+        "prob": 0.449813574552536
+      },
+      "3pU9": {
+        "label": "NEG",
+        "prob": 0.8516582250595093
+      },
+      "dual_U9": {
+        "label": "NEG",
+        "prob": 0.25265756249427795
+      },
+      "mixed25_sense": {
+        "label": "NEG",
+        "prob": 0.8186438083648682
+      },
+      "mixed25_antisense": {
+        "label": "NEG",
+        "prob": 0.8572502136230469
+      },
+      "G3A3_4": {
+        "label": "SOFT",
+        "prob": 0.9728067517280579
+      },
+      "G3322": {
+        "label": "SOFT",
+        "prob": 0.963494598865509
+      },
+      "G2322": {
+        "label": "SOFT",
+        "prob": 0.9673709869384766
+      },
+      "5pU9": {
+        "label": "SOFT",
+        "prob": 0.8362462520599365
+      },
+      "NRAS": {
+        "label": "SOFT",
+        "prob": 0.8646677732467651
+      },
+      "dual_mixed": {
+        "label": "SOFT",
+        "prob": 0.9080405831336975
+      },
+      "dual_A9": {
+        "label": "SOFT",
+        "prob": 0.8878235816955566
+      },
+      "CZ": {
+        "label": "SOFT",
+        "prob": 0.6509811282157898
+      }
+    }
+  },
+  "v15_downweighted": {
+    "ckpt": "model/strict_eval_v15_production/final_model.pt",
+    "backbone": "multimolecule/rnafm",
+    "ensemble_with": null,
+    "n_pos": 10,
+    "n_neg": 8,
+    "n_soft": 8,
+    "hard18_auroc": 0.5125,
+    "pos_recall@0.5": 0.9,
+    "neg_fp@0.5": 0.75,
+    "neg_mean": 0.7244611978530884,
+    "matched_pair_accuracy": 0.6666666666666666,
+    "matched_pair_mean_margin": 0.36438887524935937,
+    "ensemble": null,
+    "pairs": [
+      {
+        "pos": "5pA9",
+        "neg": "5pC9",
+        "prob_pos": 0.987074613571167,
+        "prob_neg": 0.1857462376356125,
+        "margin": 0.8013283759355545,
+        "correct": true,
+        "mechanism": "5'-flank A9 condenses vs C9 (C9 base-pairs the G-core -> no LLPS)"
+      },
+      {
+        "pos": "5pmixed",
+        "neg": "5pC9",
+        "prob_pos": 0.9826884865760803,
+        "prob_neg": 0.1857462376356125,
+        "margin": 0.7969422489404678,
+        "correct": true,
+        "mechanism": "5'-flank ACAGU5 condenses vs C9"
+      },
+      {
+        "pos": "3pA9",
+        "neg": "3pC9",
+        "prob_pos": 0.9852729439735413,
+        "prob_neg": 0.6056671142578125,
+        "margin": 0.37960582971572876,
+        "correct": true,
+        "mechanism": "3'-flank A9 condenses vs C9 (no aggregates)"
+      },
+      {
+        "pos": "3pA9",
+        "neg": "3pU9",
+        "prob_pos": 0.9852729439735413,
+        "prob_neg": 0.9884586930274963,
+        "margin": -0.003185749053955078,
+        "correct": false,
+        "mechanism": "3'-flank A9 condenses vs U9 (no aggregates)"
+      },
+      {
+        "pos": "3pmixed",
+        "neg": "3pC9",
+        "prob_pos": 0.9892318844795227,
+        "prob_neg": 0.6056671142578125,
+        "margin": 0.3835647702217102,
+        "correct": true,
+        "mechanism": "3'-flank ACAGU5 vs C9"
+      },
+      {
+        "pos": "5pA9",
+        "neg": "dual_U9",
+        "prob_pos": 0.987074613571167,
+        "prob_neg": 0.057280879467725754,
+        "margin": 0.9297937341034412,
+        "correct": true,
+        "mechanism": "single A9 flank vs dual-U9 flank (no LLPS)"
+      },
+      {
+        "pos": "G3A2_4",
+        "neg": "G2A2_4",
+        "prob_pos": 0.9859259724617004,
+        "prob_neg": 0.9903535842895508,
+        "margin": -0.004427611827850342,
+        "correct": false,
+        "mechanism": "G-tract: 4xG3 (LLPS) vs 4xG2 (soluble at physiol. spermine)"
+      },
+      {
+        "pos": "G3A2_4",
+        "neg": "G3A5_4",
+        "prob_pos": 0.9859259724617004,
+        "prob_neg": 0.9909911155700684,
+        "margin": -0.00506514310836792,
+        "correct": false,
+        "mechanism": "spacer: A2 (LLPS) vs A5 (aggregation abolished)"
+      },
+      {
+        "pos": "A3_G3A2_4_A",
+        "neg": "G3A5_4",
+        "prob_pos": 0.9919345378875732,
+        "prob_neg": 0.9909911155700684,
+        "margin": 0.0009434223175048828,
+        "correct": true,
+        "mechanism": "poly-A-flanked G3 core (LLPS) vs A5-spacer soluble"
+      }
+    ],
+    "per_seq": {
+      "G3A_4": {
+        "label": "POS",
+        "prob": 0.992522656917572
+      },
+      "G3A2_4": {
+        "label": "POS",
+        "prob": 0.9859259724617004
+      },
+      "A3_G3A2_4_A": {
+        "label": "POS",
+        "prob": 0.9919345378875732
+      },
+      "G3332": {
+        "label": "POS",
+        "prob": 0.9885730743408203
+      },
+      "G3323": {
+        "label": "POS",
+        "prob": 0.9863278865814209
+      },
+      "5pmixed": {
+        "label": "POS",
+        "prob": 0.9826884865760803
+      },
+      "5pA9": {
+        "label": "POS",
+        "prob": 0.987074613571167
+      },
+      "3pmixed": {
+        "label": "POS",
+        "prob": 0.9892318844795227
+      },
+      "3pA9": {
+        "label": "POS",
+        "prob": 0.9852729439735413
+      },
+      "2CZ": {
+        "label": "POS",
+        "prob": 0.04065409675240517
+      },
+      "G3A5_4": {
+        "label": "NEG",
+        "prob": 0.9909911155700684
+      },
+      "G2A2_4": {
+        "label": "NEG",
+        "prob": 0.9903535842895508
+      },
+      "5pC9": {
+        "label": "NEG",
+        "prob": 0.1857462376356125
+      },
+      "3pC9": {
+        "label": "NEG",
+        "prob": 0.6056671142578125
+      },
+      "3pU9": {
+        "label": "NEG",
+        "prob": 0.9884586930274963
+      },
+      "dual_U9": {
+        "label": "NEG",
+        "prob": 0.057280879467725754
+      },
+      "mixed25_sense": {
+        "label": "NEG",
+        "prob": 0.9872064590454102
+      },
+      "mixed25_antisense": {
+        "label": "NEG",
+        "prob": 0.9899858236312866
+      },
+      "G3A3_4": {
+        "label": "SOFT",
+        "prob": 0.9929314851760864
+      },
+      "G3322": {
+        "label": "SOFT",
+        "prob": 0.9818463921546936
+      },
+      "G2322": {
+        "label": "SOFT",
+        "prob": 0.9873207807540894
+      },
+      "5pU9": {
+        "label": "SOFT",
+        "prob": 0.9861495494842529
+      },
+      "NRAS": {
+        "label": "SOFT",
+        "prob": 0.9864296913146973
+      },
+      "dual_mixed": {
+        "label": "SOFT",
+        "prob": 0.9959574341773987
+      },
+      "dual_A9": {
+        "label": "SOFT",
+        "prob": 0.97982257604599
+      },
+      "CZ": {
+        "label": "SOFT",
+        "prob": 0.07382325828075409
+      }
+    }
+  },
+  "v16_selective_dw": {
+    "ckpt": "model/strict_eval_v16_production/final_model.pt",
+    "backbone": "multimolecule/rnafm",
+    "ensemble_with": null,
+    "n_pos": 10,
+    "n_neg": 8,
+    "n_soft": 8,
+    "hard18_auroc": 0.7125,
+    "pos_recall@0.5": 0.2,
+    "neg_fp@0.5": 0.125,
+    "neg_mean": 0.1841319501399994,
+    "matched_pair_accuracy": 0.7777777777777778,
+    "matched_pair_mean_margin": 0.23241916526522902,
+    "ensemble": null,
+    "pairs": [
+      {
+        "pos": "5pA9",
+        "neg": "5pC9",
+        "prob_pos": 0.29674074053764343,
+        "prob_neg": 0.10024557262659073,
+        "margin": 0.1964951679110527,
+        "correct": true,
+        "mechanism": "5'-flank A9 condenses vs C9 (C9 base-pairs the G-core -> no LLPS)"
+      },
+      {
+        "pos": "5pmixed",
+        "neg": "5pC9",
+        "prob_pos": 0.44322821497917175,
+        "prob_neg": 0.10024557262659073,
+        "margin": 0.342982642352581,
+        "correct": true,
+        "mechanism": "5'-flank ACAGU5 condenses vs C9"
+      },
+      {
+        "pos": "3pA9",
+        "neg": "3pC9",
+        "prob_pos": 0.4856107234954834,
+        "prob_neg": 0.06312102824449539,
+        "margin": 0.422489695250988,
+        "correct": true,
+        "mechanism": "3'-flank A9 condenses vs C9 (no aggregates)"
+      },
+      {
+        "pos": "3pA9",
+        "neg": "3pU9",
+        "prob_pos": 0.4856107234954834,
+        "prob_neg": 0.051679059863090515,
+        "margin": 0.4339316636323929,
+        "correct": true,
+        "mechanism": "3'-flank A9 condenses vs U9 (no aggregates)"
+      },
+      {
+        "pos": "3pmixed",
+        "neg": "3pC9",
+        "prob_pos": 0.6126882433891296,
+        "prob_neg": 0.06312102824449539,
+        "margin": 0.5495672151446342,
+        "correct": true,
+        "mechanism": "3'-flank ACAGU5 vs C9"
+      },
+      {
+        "pos": "5pA9",
+        "neg": "dual_U9",
+        "prob_pos": 0.29674074053764343,
+        "prob_neg": 0.022725993767380714,
+        "margin": 0.2740147467702627,
+        "correct": true,
+        "mechanism": "single A9 flank vs dual-U9 flank (no LLPS)"
+      },
+      {
+        "pos": "G3A2_4",
+        "neg": "G2A2_4",
+        "prob_pos": 0.34544721245765686,
+        "prob_neg": 0.2519300878047943,
+        "margin": 0.09351712465286255,
+        "correct": true,
+        "mechanism": "G-tract: 4xG3 (LLPS) vs 4xG2 (soluble at physiol. spermine)"
+      },
+      {
+        "pos": "G3A2_4",
+        "neg": "G3A5_4",
+        "prob_pos": 0.34544721245765686,
+        "prob_neg": 0.5613219738006592,
+        "margin": -0.21587476134300232,
+        "correct": false,
+        "mechanism": "spacer: A2 (LLPS) vs A5 (aggregation abolished)"
+      },
+      {
+        "pos": "A3_G3A2_4_A",
+        "neg": "G3A5_4",
+        "prob_pos": 0.5559709668159485,
+        "prob_neg": 0.5613219738006592,
+        "margin": -0.005351006984710693,
+        "correct": false,
+        "mechanism": "poly-A-flanked G3 core (LLPS) vs A5-spacer soluble"
+      }
+    ],
+    "per_seq": {
+      "G3A_4": {
+        "label": "POS",
+        "prob": 0.1855255514383316
+      },
+      "G3A2_4": {
+        "label": "POS",
+        "prob": 0.34544721245765686
+      },
+      "A3_G3A2_4_A": {
+        "label": "POS",
+        "prob": 0.5559709668159485
+      },
+      "G3332": {
+        "label": "POS",
+        "prob": 0.1594846248626709
+      },
+      "G3323": {
+        "label": "POS",
+        "prob": 0.16204415261745453
+      },
+      "5pmixed": {
+        "label": "POS",
+        "prob": 0.44322821497917175
+      },
+      "5pA9": {
+        "label": "POS",
+        "prob": 0.29674074053764343
+      },
+      "3pmixed": {
+        "label": "POS",
+        "prob": 0.6126882433891296
+      },
+      "3pA9": {
+        "label": "POS",
+        "prob": 0.4856107234954834
+      },
+      "2CZ": {
+        "label": "POS",
+        "prob": 0.04461822658777237
+      },
+      "G3A5_4": {
+        "label": "NEG",
+        "prob": 0.5613219738006592
+      },
+      "G2A2_4": {
+        "label": "NEG",
+        "prob": 0.2519300878047943
+      },
+      "5pC9": {
+        "label": "NEG",
+        "prob": 0.10024557262659073
+      },
+      "3pC9": {
+        "label": "NEG",
+        "prob": 0.06312102824449539
+      },
+      "3pU9": {
+        "label": "NEG",
+        "prob": 0.051679059863090515
+      },
+      "dual_U9": {
+        "label": "NEG",
+        "prob": 0.022725993767380714
+      },
+      "mixed25_sense": {
+        "label": "NEG",
+        "prob": 0.04970822483301163
+      },
+      "mixed25_antisense": {
+        "label": "NEG",
+        "prob": 0.372323602437973
+      },
+      "G3A3_4": {
+        "label": "SOFT",
+        "prob": 0.479642778635025
+      },
+      "G3322": {
+        "label": "SOFT",
+        "prob": 0.1319803148508072
+      },
+      "G2322": {
+        "label": "SOFT",
+        "prob": 0.13414080440998077
+      },
+      "5pU9": {
+        "label": "SOFT",
+        "prob": 0.03002261556684971
+      },
+      "NRAS": {
+        "label": "SOFT",
+        "prob": 0.4132007956504822
+      },
+      "dual_mixed": {
+        "label": "SOFT",
+        "prob": 0.3416926860809326
+      },
+      "dual_A9": {
+        "label": "SOFT",
+        "prob": 0.3784283995628357
+      },
+      "CZ": {
+        "label": "SOFT",
+        "prob": 0.08954188227653503
+      }
+    }
+  }
+}

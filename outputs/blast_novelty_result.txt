@@ -1,0 +1,8 @@
+submitting 25 designs to NCBI blastn vs nt ...
+RID=2SWMDVJZ016  estimated 30s; polling ...
+READY — fetching results
+
+================ NCBI nt BLAST RESULTS ================
+
+Summary: 25/25 designs have NO significant nt hit.
+Full report: https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Get&RID=2SWMDVJZ016

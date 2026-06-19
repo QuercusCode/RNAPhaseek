@@ -1,0 +1,11 @@
+{
+  "submitted": "2026-06-13",
+  "note": "RNAcentral was congested (stuck ~50%, 0/99 DBs); jobs persist ~7 days. Re-poll with scripts/analysis/rnacentral_repoll.py (no resubmit needed). Rfam was down (server overload) and not submitted.",
+  "jobs": {
+    "ga_v6_design_0": "03537f80-a0c9-495f-a039-ca86c03f0e98",
+    "den_design_130": "d200a1e0-ac32-4947-9bb8-f556d1c322df",
+    "den_design_27": "350435c3-3d12-4a41-9374-4324a5b181a8",
+    "den_design_2": "4d7094ab-0ac1-4526-b4b8-0b628b13c0c8",
+    "den_design_62": "2ccb262a-b577-4032-8bf4-556339ef81a3"
+  }
+}

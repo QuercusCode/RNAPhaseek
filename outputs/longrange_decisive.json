@@ -1,0 +1,17 @@
+{
+  "auroc": {
+    "production_fullseq (shipped)": 0.900526652778905,
+    "first_window (standalone)": 0.8879825771717663,
+    "max_window (best module)": 0.8875316758199641,
+    "mean_window": 0.9037009982955929,
+    "noisy_OR (any window)": 0.8950391833274717,
+    "v7_MIL (learned attention)": 0.9295015736457177
+  },
+  "n_pos": 333,
+  "n_neg": 333,
+  "best_window_nonfirst_frac": 0.6396396396396397,
+  "max_beats_first_by_0.1_frac": 0.12612612612612611,
+  "window": 1022,
+  "stride": 512,
+  "cap": 16
+}

@@ -1,0 +1,60 @@
+# --- v13 weights (live on Hugging Face Hub, too large for GitHub) ---
+model/strict_eval_v13_production/final_model.pt
+model/strict_eval_v13_production/norm_stats.npz
+
+# Any other large model files that might accidentally be added later
+*.pt
+*.npz
+!model/strict_eval_v13_production/*.json
+!model/strict_eval_v13_production/*.md
+
+# --- Local rollback / archive artefacts ---
+*.bak
+rnaphaseek.py.pre-extmove.bak
+split_to_external.log
+
+# --- Python caches ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# --- IDE / editor / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# --- Claude Code session settings ---
+.claude/
+
+# --- Training logs (kept locally, not in git) ---
+*.log
+outputs/*.log
+
+# --- Empty stub dirs that are runtime-only ---
+Data/processed/
+
+# --- Temporary / scratch ---
+/tmp_*
+*.tmp
+.cache/
+
+# --- Notebook cell outputs (re-runnable; keep clean diffs) ---
+notebooks/.ipynb_checkpoints/
+
+# --- HF Hub cache (if anyone runs locally) ---
+~/.cache/huggingface/
+
+# --- Virtual envs ---
+.venv/
+venv/
+env/

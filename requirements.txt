@@ -1,0 +1,42 @@
+# RNAPhaseek — Python dependencies
+# Install with: pip install -r requirements.txt
+
+# Core ML
+torch>=2.1.0
+transformers>=4.40.0     # RNA-FM backbone via HuggingFace
+sentencepiece>=0.1.99    # required by some HuggingFace tokenizers
+numpy>=1.24.0
+scipy>=1.10.0
+scikit-learn>=1.3.0
+xgboost>=2.0.0
+
+# Sequence / bioinformatics
+biopython>=1.81
+tokenizers>=0.15.0       # HuggingFace BPE tokeniser
+
+# Augmentation
+hmmlearn>=0.3.0
+
+# Data / utils
+requests>=2.31.0
+tqdm>=4.66.0
+
+# RNA secondary structure (optional but strongly recommended)
+# ViennaRNA Python bindings — install via conda:
+#   conda install -c bioconda viennarna
+# or via pip (not always available):
+#   pip install ViennaRNA
+
+# Data collection (used by Functions/data_collection/)
+openpyxl>=3.1.0          # parse smOOPs xlsx
+beautifulsoup4>=4.12.0   # scrape RNAPhaSep / G4RNA HTML tables
+lxml>=4.9.0              # fast HTML parser backend for BeautifulSoup
+
+# Visualisation (optional)
+matplotlib>=3.7.0
+seaborn>=0.12.0
+pandas>=2.0.0
+
+# Deduplication (install separately via conda or brew)
+# conda install -c bioconda cd-hit
+# brew install cd-hit

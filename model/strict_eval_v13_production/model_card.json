@@ -1,0 +1,48 @@
+{
+  "model": "v13 production",
+  "version": "v13",
+  "replaces": "v6",
+  "backbone": "multimolecule/rnafm",
+  "architecture": "RNA-FM (640-dim) + FEGSTrans adapter + 38-dim biophysics, organism-balanced sampler",
+  "bio_dim": 38,
+  "training": {
+    "pool": "v5/v6 corpus + 83 de-leaked matched training pairs (1396 pos / 678 neg / 184 struct-neg = 2258 total)",
+    "matched_pairs": "83 synthetic flank-sequestration pairs on 20 diverse G4 cores (A-flank POS vs complementary C/U-flank NEG) + spacer/tract negatives + real motif pairs, de-leaked vs 26 held-out benchmark seqs (max 8-mer Jaccard 0.33)",
+    "recipe": "v6 recipe: unfreeze last 2 backbone layers, lr=1e-4, backbone_lr=5e-6, weight_decay=0.03, patience=6, organism-balanced sampler",
+    "n_train": 2049,
+    "n_val": 209,
+    "best_inner_val_auroc": 0.8355
+  },
+  "cv_performance": {
+    "note": "5-fold cluster-grouped CV (model/strict_eval_v13_cv/), NO regression vs v6",
+    "overall_auroc": 0.8750,
+    "struct_auroc": 0.8968,
+    "yeast_auroc": 0.8981,
+    "nonyeast_auroc": 0.8028,
+    "fold_scores": [0.8913, 0.8487, 0.8762, 0.8764, 0.9021],
+    "f1_optimal_threshold": 0.63,
+    "f1_at_optimal": 0.8629,
+    "f1_at_0.50": 0.8597
+  },
+  "v6_comparison": {
+    "v6_overall_auroc": 0.8837,
+    "v6_struct_auroc": 0.8976,
+    "v6_nonyeast_auroc": 0.7982,
+    "delta_overall": -0.0087,
+    "delta_nonyeast": "+0.0046 (improvement)",
+    "note": "v13 trades 0.009 overall (within fold noise) for +0.005 non-yeast and the structure-specificity breakthrough below"
+  },
+  "structure_specificity_benchmark": {
+    "note": "9 mechanistically matched pairs (same G4 core, one flank/spacer/tract change flips LLPS), HELD-OUT (never seen in training)",
+    "v13_matched_pair_accuracy": 1.0,
+    "v6_matched_pair_accuracy": 0.67,
+    "v13_mean_margin": 0.130,
+    "v6_mean_margin": 0.002,
+    "v13_hard18_auroc": 0.812,
+    "v6_hard18_auroc": 0.612,
+    "flagship": "5'-A9 (LLPS+, 0.94) vs 5'-C9 (LLPS-, 0.69): model now knows C9 flank sequesters the G-core"
+  },
+  "promotion_rationale": "v13 achieves perfect matched-pair ranking (1.00 vs v6 0.67) with zero general-corpus regression. The 83-pair pilot is the sweet spot: v14 (230 pairs) caused -0.02 regression, v15/v16 (downweight variants) traded off other signals. The structure-specificity gap — the primary blind spot — is closed.",
+  "default_threshold": 0.50,
+  "threshold_note": "F1-optimal on v13 CV is 0.63 (F1=0.863), but 0.50 is nearly equivalent (F1=0.860) and backwards-compatible with v6 users. Use --threshold 0.63 for strict calibration."
+}
