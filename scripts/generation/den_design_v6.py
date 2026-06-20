@@ -3,7 +3,7 @@ Deep Exploration Network (DEN) for DIVERSE de novo LLPS RNA design.
 
 SeqProp and the GA both mode-collapsed to a single attractor. DEN trains a
 GENERATOR network G(z) (z ~ N(0,I)) to output sequences that simultaneously
-(a) maximize the v13 model's P(LLPS) and (b) are mutually DIVERSE — via a
+(a) maximize the production model's P(LLPS) and (b) are mutually DIVERSE — via a
 pairwise-similarity penalty across each batch (Linder et al. 2020, Cell Systems).
 
 Gradient-based, so fitness uses the differentiable RNA-FM+adapter proxy
@@ -27,7 +27,7 @@ from Functions.RNAPhaseek.RNAPhaseek_utils    import list_npz_sorted, setup_devi
 from Functions.RNA_biophysical                import RNABiophysicalExtractor
 from Functions.precompute_fegs                import process_fasta
 
-FINAL = "model/strict_eval_v13_production/final_model.pt"
+FINAL = "model/production/final_model.pt"
 ZDIM, BATCH, LR, LAMBDA = 64, 12, 1e-3, 4.0
 
 
@@ -40,7 +40,7 @@ def main(args):
     tag = "v6" if canonical else f"{L}nt"
     out_fa = args.out or (f"outputs/designs/designed_den_{tag}.fasta")
     fig_p = f"report_assets/fig22_den_{tag}.png"
-    sum_p = f"model/strict_eval_v13_production/den_{tag}_summary.json"
+    sum_p = f"model/production/den_{tag}_summary.json"
     set_seed(args.seed); device = setup_device()
     model = load_hybrid_for_generation(FINAL, device)
     for p in model.parameters(): p.requires_grad_(False)
@@ -96,8 +96,8 @@ def main(args):
     seqs = list(dict.fromkeys(seqs))                   # dedup exact
     print(f"\nSampled {len(seqs)} unique sequences")
 
-    # ── Re-score with the FULL v13 production model + measure diversity ──
-    nz = np.load("model/strict_eval_v13_production/norm_stats.npz")
+    # ── Re-score with the FULL production model + measure diversity ──
+    nz = np.load("model/production/norm_stats.npz")
     m, sd = nz["mean"].astype(np.float32), nz["std"].astype(np.float32)
     ext = RNABiophysicalExtractor(normalize=False)
     tok = AutoTokenizer.from_pretrained(model.args.backbone, trust_remote_code=True)
@@ -151,7 +151,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser(description="DEN: diverse de novo phase-separating RNA design (v13 model)")
+    ap = argparse.ArgumentParser(description="DEN: diverse de novo phase-separating RNA design")
     ap.add_argument("--length", type=int, default=200, help="design length in nt (<= ~1020)")
     ap.add_argument("--n", type=int, default=15, help="number of diverse designs to output")
     ap.add_argument("--steps", type=int, default=400, help="DEN generator training steps")

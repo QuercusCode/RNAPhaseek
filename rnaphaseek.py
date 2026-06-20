@@ -2,7 +2,7 @@
 """
 RNAPhaseek — command-line tool for RNA-self-LLPS prediction and de novo design.
 
-Wraps the production model (v13: model/strict_eval_v13_production/) and the GA/DEN
+Wraps the production model (model/production/) and the GA/DEN
 generators behind three subcommands:
 
   score     Predict P(LLPS) for each RNA in a FASTA.
@@ -25,13 +25,13 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import paths  # project path bootstrap (see paths.py)
 
-DEFAULT_MODEL = "model/strict_eval_v13_production/final_model.pt"
-DEFAULT_NORM  = "model/strict_eval_v13_production/norm_stats.npz"
-# v6_production, v6_orgbalanced, v7_mil checkpoints are archived to LaCie (only v13 is
-# kept locally). --uncertainty and --long-model mil need them; pass --ensemble-from
-# <root> or set RNAPHASEEK_ENSEMBLE_ROOT to override the default below.
+DEFAULT_MODEL = "model/production/final_model.pt"
+DEFAULT_NORM  = "model/production/norm_stats.npz"
+# Additional ensemble-member checkpoints are archived externally (only the
+# production model is kept locally). --uncertainty and --long-model mil need them;
+# pass --ensemble-from <root> or set RNAPHASEEK_ENSEMBLE_ROOT to override.
 DEFAULT_ENSEMBLE_ROOT = "/Volumes/LaCie/RNAPhaseek_scripts/model"
-MAX_CTX = 1022  # RNA-FM context window; v6 silently truncates sequences longer than this
+MAX_CTX = 1022  # RNA-FM context window; the model silently truncates longer sequences
 
 
 def _resolve_ensemble_root(a):
@@ -208,8 +208,8 @@ def _hush():
 # Subcommands
 # ─────────────────────────────────────────────────────────────────────────────
 # 4 independently-trained checkpoints; disagreement = epistemic uncertainty / OOD signal.
-# v13 (matched-pair-aware) + v6 + v6_orgbalanced + v7_mil. v6/v6_orgbal/v7_mil are
-# resolved at call-time through _resolve_ensemble_root(a) so they can live on LaCie.
+# Production model + 3 archived ensemble members resolved at call-time through
+# _resolve_ensemble_root(a) so the heavier members can live on external storage.
 
 
 def _ensemble_probs(seqs, root, quiet=True):
@@ -227,7 +227,7 @@ def _ensemble_probs(seqs, root, quiet=True):
 
 def _cmd_score_uncertainty(a, recs, seqs):
     root = _resolve_ensemble_root(a)
-    print(f"[rnaphaseek] uncertainty mode: 4-model ensemble (v13 local + v6/v6_orgbal/v7_mil from {root}) ...", file=sys.stderr)
+    print(f"[rnaphaseek] uncertainty mode: 4-model ensemble (production local + 3 members from {root}) ...", file=sys.stderr)
     ens = _ensemble_probs(seqs, root, quiet=a.quiet)
     mean, std = ens.mean(0), ens.std(0)
     thr = a.abstain_threshold
@@ -261,26 +261,26 @@ def cmd_score(a):
               f"Use --long-model mil to read the full length.", file=sys.stderr)
     probs = [0.0] * n; models = [""] * n
 
-    # v6 (production) scores all short RNAs; also long ones if --long-model truncate
-    v6_targets = [i for i in range(n) if i in short_set] + ([] if use_mil else long_idx)
-    if v6_targets:
+    # Production model scores all short RNAs; also long ones if --long-model truncate
+    prod_targets = [i for i in range(n) if i in short_set] + ([] if use_mil else long_idx)
+    if prod_targets:
         with _hush():
             sc = RNAPhaseekScorer(a.model, a.norm, quiet=a.quiet)
-            ps = sc.score([seqs[i] for i in v6_targets])
-        for i, p in zip(v6_targets, ps):
-            probs[i] = float(p); models[i] = "v13" if i in short_set else "v13_trunc"
-    # v7 attention-MIL scores long RNAs full-length (default)
+            ps = sc.score([seqs[i] for i in prod_targets])
+        for i, p in zip(prod_targets, ps):
+            probs[i] = float(p); models[i] = "production" if i in short_set else "production_trunc"
+    # Attention-MIL scores long RNAs full-length (default)
     if use_mil:
         root = _resolve_ensemble_root(a)
         mil_m, mil_n = _mil_paths(root)
         _require_files([mil_m, mil_n], "--long-model mil", root)
-        print(f"[rnaphaseek] {len(long_idx)} sequence(s) >{MAX_CTX}nt -> v7 MIL from {root} "
-              f"(full-length; use --long-model truncate for the v13 default behavior)", file=sys.stderr)
+        print(f"[rnaphaseek] {len(long_idx)} sequence(s) >{MAX_CTX}nt -> MIL from {root} "
+              f"(full-length; use --long-model truncate for default behavior)", file=sys.stderr)
         with _hush():
             mil = RNAPhaseekMILScorer(mil_m, mil_n, quiet=a.quiet)
             pl = mil.score([seqs[i] for i in long_idx])
         for i, p in zip(long_idx, pl):
-            probs[i] = float(p); models[i] = "v7_mil"
+            probs[i] = float(p); models[i] = "mil"
 
     rows = [("id", "length", "GC_percent", "P_LLPS", "model", f"call@{a.threshold}")]
     for i, (h, _) in enumerate(recs):
@@ -298,8 +298,8 @@ def cmd_score(a):
 
 def cmd_design(a):
     if a.method == "den":
-        # DEN is gradient-based; delegate to the validated v6 DEN generator.
-        print(f"[rnaphaseek] running DEN (diverse library, length={a.length}, v13 model) ...", file=sys.stderr)
+        # DEN is gradient-based; delegate to the dedicated generator script.
+        print(f"[rnaphaseek] running DEN (diverse library, length={a.length}) ...", file=sys.stderr)
         cmd = [sys.executable, "scripts/generation/den_design_v6.py", "--length", str(a.length)]
         if a.out:
             cmd += ["--out", a.out]
@@ -308,7 +308,7 @@ def cmd_design(a):
                          else f"outputs/designs/designed_den_{a.length}nt.fasta")
         print(f"[rnaphaseek] DEN designs -> {dest}", file=sys.stderr)
         return
-    # ── GA: optimize the v6 scorer's P(LLPS) (full-pipeline fitness) ──
+    # ── GA: optimize the production scorer's P(LLPS) (full-pipeline fitness) ──
     with _hush():
         sc = RNAPhaseekScorer(a.model, a.norm, quiet=a.quiet)
     L, POP, GEN, ELITE, MUT, TOURN = a.length, 64, a.generations, 10, 0.04, 3
@@ -365,12 +365,12 @@ def cmd_validate(a):
 
 
 def main():
-    p = argparse.ArgumentParser(prog="rnaphaseek", description="RNA-self-LLPS prediction & de novo design (v13 model).")
-    p.add_argument("--model", default=DEFAULT_MODEL, help="model checkpoint (default: v13 production)")
+    p = argparse.ArgumentParser(prog="rnaphaseek", description="RNA-self-LLPS prediction & de novo design.")
+    p.add_argument("--model", default=DEFAULT_MODEL, help="model checkpoint (default: production)")
     p.add_argument("--norm", default=DEFAULT_NORM, help="biophysics norm_stats.npz")
     p.add_argument("--ensemble-from", default=None, dest="ensemble_from",
-                   help="root dir containing strict_eval_v6_production / strict_eval_v6_orgbalanced / "
-                        f"strict_eval_v7_mil (needed for --uncertainty and --long-model mil; "
+                   help=f"root dir containing the archived ensemble-member checkpoints "
+                        f"(needed for --uncertainty and --long-model mil; "
                         f"default {DEFAULT_ENSEMBLE_ROOT}, also overridable via RNAPHASEEK_ENSEMBLE_ROOT)")
     p.add_argument("--quiet", action="store_true", help="suppress model-load chatter")
     sub = p.add_subparsers(dest="cmd", required=True)

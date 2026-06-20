@@ -1,12 +1,15 @@
-# --- v13 weights (live on Hugging Face Hub, too large for GitHub) ---
-model/strict_eval_v13_production/final_model.pt
-model/strict_eval_v13_production/norm_stats.npz
+# --- Production weights (live on Hugging Face Hub, too large for GitHub) ---
+model/production/final_model.pt
+model/production/norm_stats.npz
+
+# --- Internal training / version-tracking artifacts (kept locally only) ---
+model/production/model_card.json
+model/production/RESULT.md
+model/production/den_*_summary.json
 
 # Any other large model files that might accidentally be added later
 *.pt
 *.npz
-!model/strict_eval_v13_production/*.json
-!model/strict_eval_v13_production/*.md
 
 # --- Local rollback / archive artefacts ---
 *.bak
