@@ -33,10 +33,10 @@ Three streams fused in a single MLP head:
 2. **FEGSTrans adapter** that pools backbone embeddings with a structural FEGS bias
 3. **38 biophysical features** (MFE, GC%, G4-potential, self-complementarity, etc.)
 
-Trained on a strict protein-free RNA-LLPS corpus (positives + negatives + structural
-hard negatives) plus matched training pairs that teach the model the free-vs-sequestered
-G-tract distinction — closing the structure-specificity blind spot of earlier training
-recipes.
+Trained on a strict protein-free RNA-LLPS corpus (positives + negatives +
+structural hard negatives) plus matched training pairs that teach the model
+the free-vs-sequestered G-tract distinction — closing the structure-specificity
+blind spot of earlier training recipes.
 
 ## Headline numbers
 
