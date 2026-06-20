@@ -127,7 +127,7 @@ story += [
     Spacer(1, 1.5*cm),
     p("Comprehensive project report and paper outline", SUBTITLE),
     Spacer(1, 5*cm),
-    p("Author: Amir Pandi (INSERM)", BODY),
+    p("Author: Amir M. Cheraghali (INSERM)", BODY),
     p("Date: 2026", BODY),
     PageBreak(),
 ]
@@ -705,7 +705,7 @@ doc = SimpleDocTemplate(
     leftMargin=2.0*cm, rightMargin=2.0*cm,
     topMargin=2.0*cm, bottomMargin=2.0*cm,
     title="RNAPhaseek project report",
-    author="Amir Pandi",
+    author="Amir M. Cheraghali",
 )
 doc.build(story, onFirstPage=add_page_number, onLaterPages=add_page_number)
 print(f"Wrote {out_path}")

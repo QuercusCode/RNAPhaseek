@@ -19,9 +19,9 @@ We would be grateful for your consideration and look forward to the reviewers' f
 
 Sincerely,
 
-**Amir Pandi**
+**Amir M. Cheraghali**
 On behalf of all authors
 INSERM, France
-amir.pandi@inserm.fr
+amirmohammad.cheraghali@inserm.fr
 
 *Suggested reviewers (optional): [to be completed].*

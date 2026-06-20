@@ -101,7 +101,7 @@ def build_hf_readme(repo_id: str, card: dict) -> str:
 
         ## Citation
 
-        If you use RNAPhaseek, please cite the accompanying manuscript (Pandi et al.).
+        If you use RNAPhaseek, please cite the accompanying manuscript (Cheraghali et al.).
 
         ## License
 

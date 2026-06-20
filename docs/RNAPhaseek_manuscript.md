@@ -1,9 +1,9 @@
 # RNAPhaseek: a foundation-model framework for predicting and designing self–phase-separating RNA
 
-**Amir Pandi**^(1,\*) *and colleagues* *(author list to be completed)*
+**Amir M. Cheraghali**^(1,\*) *and colleagues* *(author list to be completed)*
 
 ^1 INSERM, France
-\*Correspondence: amir.pandi@inserm.fr
+\*Correspondence: amirmohammad.cheraghali@inserm.fr
 
 *Draft manuscript — numbers and figures are drawn from the project results; citations marked “[verify]” require a final reference check before submission.*
 
@@ -111,7 +111,7 @@ The authors declare no competing interests.
 
 ## Author Contributions
 
-[Author contributions to be completed, e.g.: A.P. conceived the study, supervised the work, and wrote the manuscript; all authors read and approved the final manuscript.]
+[Author contributions to be completed, e.g.: A.C. conceived the study, supervised the work, and wrote the manuscript; all authors read and approved the final manuscript.]
 
 ---
 
