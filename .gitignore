@@ -15,6 +15,7 @@ model/production/den_*_summary.json
 *.bak
 rnaphaseek.py.pre-extmove.bak
 split_to_external.log
+archive/
 
 # --- Python caches ---
 __pycache__/
