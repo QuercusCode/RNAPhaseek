@@ -45,8 +45,6 @@ $PY rnaphaseek.py design --method den -o den_library.fasta    # diverse library
 $PY rnaphaseek.py validate den_library.fasta -o trust.csv
 ```
 
-See [`docs/RNAPHASEEK_CLI.md`](docs/RNAPHASEEK_CLI.md) for the full CLI reference.
-
 ---
 
 ## The model in one paragraph
