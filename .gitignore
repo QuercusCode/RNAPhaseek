@@ -44,6 +44,15 @@ Thumbs.db
 *.log
 outputs/*.log
 
+# --- Human transcriptome scoring data (large FASTA / CSV / DB) ---
+outputs/human_transcriptome/*.fa
+outputs/human_transcriptome/*.fa.gz
+outputs/human_transcriptome/*.csv
+outputs/human_transcriptome/*.db
+outputs/human_transcriptome/chunks/
+outputs/human_transcriptome/nohup.out
+outputs/human_transcriptome/*.pid
+
 # --- Empty stub dirs that are runtime-only ---
 Data/processed/
 
