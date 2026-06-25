@@ -198,6 +198,70 @@ def _gc(s):
     return 100 * sum(c in "GC" for c in s) / n
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Sliding-window scoring for sequences > MAX_CTX: tile into 1022-nt windows,
+# score each one with the production v13 scorer (which carries the matched-pair
+# structure-specificity guarantee), then aggregate. Lets long RNAs benefit from
+# the same head that's validated on the matched-pair benchmark — rather than
+# routing to MIL, which is positively biased and not matched-pair-validated.
+# ─────────────────────────────────────────────────────────────────────────────
+def _window_starts(L, window=MAX_CTX, stride=None, min_step=50):
+    """Window start positions covering a sequence of length L. The last window
+    is right-aligned to position L. If the gap between the last natural step
+    and L-window is smaller than `min_step`, the last natural start is snapped
+    to the right edge rather than appended (avoids near-duplicate windows).
+    For L <= window: a single window starting at 0."""
+    if stride is None: stride = window - 200
+    if L <= window: return [0]
+    last = L - window
+    if last < min_step:
+        return [0]  # window already covers all but a tiny tail; accept truncation
+    starts = list(range(0, last, stride))
+    if starts[-1] + min_step <= last:
+        starts.append(last)
+    elif starts[-1] != last:
+        starts[-1] = last
+    return starts
+
+
+def _aggregate(probs, mode, topk=3):
+    """probs: 1-D array of per-window P(LLPS); returns a single scalar."""
+    if mode == "max": return float(probs.max())
+    if mode == "mean": return float(probs.mean())
+    if mode == "top3_mean":
+        k = min(topk, len(probs))
+        return float(np.sort(probs)[-k:].mean())
+    raise ValueError(f"unknown aggregate {mode!r}")
+
+
+def _score_windowed(scorer, seqs, window=MAX_CTX, stride=None, aggregate="max",
+                    topk=3, batch_size=8):
+    """Score each sequence by tiling into <=window-nt windows, scoring each
+    window with `scorer`, then aggregating. Returns (aggregate_probs, per_window).
+    per_window[i] is a list of (start, end, p) for sequence i.
+    """
+    flat, owners = [], []  # owners[k] = parent sequence index for window k
+    starts_by_seq = []
+    for i, s in enumerate(seqs):
+        starts = _window_starts(len(s), window, stride)
+        starts_by_seq.append(starts)
+        for st in starts:
+            flat.append(s[st:st + window])
+            owners.append(i)
+    flat_probs = scorer.score(flat, batch_size=batch_size)
+    agg = np.zeros(len(seqs), dtype=np.float32)
+    per_window = [[] for _ in seqs]
+    cursor = 0
+    for i, starts in enumerate(starts_by_seq):
+        n = len(starts)
+        ps = flat_probs[cursor:cursor + n]
+        cursor += n
+        agg[i] = _aggregate(ps, aggregate, topk=topk)
+        per_window[i] = [(st, min(st + window, len(seqs[i])), float(p))
+                         for st, p in zip(starts, ps)]
+    return agg, per_window
+
+
 import contextlib
 @contextlib.contextmanager
 def _hush():
@@ -263,27 +327,51 @@ def cmd_score(a):
     short_set = {i for i in range(n) if len(seqs[i]) <= MAX_CTX}
     long_idx = [i for i in range(n) if i not in short_set]
     use_mil = (a.long_model == "mil") and bool(long_idx)
-    if long_idx and not use_mil:
+    use_windows = (a.long_model == "windows") and bool(long_idx)
+    if long_idx and a.long_model == "truncate":
         print(f"[rnaphaseek] note: {len(long_idx)} sequence(s) >{MAX_CTX}nt scored on their first "
               f"{MAX_CTX}nt only (held-out tests show no accuracy loss vs full-length). "
-              f"Use --long-model mil to read the full length.", file=sys.stderr)
+              f"Use --long-model windows for sliding-window v13 (recommended for full-length transparency) "
+              f"or --long-model mil for the v7 MIL scorer.", file=sys.stderr)
     probs = [0.0] * n; models = [""] * n
+    per_window_rows = []  # only populated under --long-model windows
 
-    # Production model scores all short RNAs; also long ones if --long-model truncate
-    prod_targets = [i for i in range(n) if i in short_set] + ([] if use_mil else long_idx)
-    if prod_targets:
+    # Production model scores all short RNAs; also long ones if --long-model {truncate,windows}
+    short_targets = sorted(short_set)
+    long_via_prod = [] if (use_mil or use_windows) else long_idx
+    prod_targets = short_targets + long_via_prod
+    if prod_targets or use_windows:
         with _hush():
             sc = RNAPhaseekScorer(a.model, a.norm, quiet=a.quiet)
-            ps = sc.score([seqs[i] for i in prod_targets])
-        for i, p in zip(prod_targets, ps):
-            probs[i] = float(p); models[i] = "production" if i in short_set else "production_trunc"
-    # Attention-MIL scores long RNAs full-length (default)
+        if prod_targets:
+            with _hush():
+                ps = sc.score([seqs[i] for i in prod_targets])
+            for i, p in zip(prod_targets, ps):
+                probs[i] = float(p); models[i] = "production" if i in short_set else "production_trunc"
+        if use_windows:
+            stride = a.window_stride
+            print(f"[rnaphaseek] {len(long_idx)} sequence(s) >{MAX_CTX}nt -> sliding-window v13 "
+                  f"(window={MAX_CTX}, stride={stride}, aggregate={a.aggregate})", file=sys.stderr)
+            with _hush():
+                agg, per_w = _score_windowed(
+                    sc, [seqs[i] for i in long_idx],
+                    window=MAX_CTX, stride=stride, aggregate=a.aggregate)
+            for k, i in enumerate(long_idx):
+                probs[i] = float(agg[k])
+                models[i] = f"windows_{a.aggregate}({len(per_w[k])})"
+                if a.per_window_out:
+                    sid = recs[i][0].split()[0]
+                    for st, en, pw in per_w[k]:
+                        per_window_rows.append((sid, st, en, f"{pw:.4f}"))
+
+    # Attention-MIL scores long RNAs full-length (legacy / comparison path)
     if use_mil:
         root = _resolve_ensemble_root(a)
         mil_m, mil_n = _mil_paths(root)
         _require_files([mil_m, mil_n], "--long-model mil", root)
         print(f"[rnaphaseek] {len(long_idx)} sequence(s) >{MAX_CTX}nt -> MIL from {root} "
-              f"(full-length; use --long-model truncate for default behavior)", file=sys.stderr)
+              f"(legacy; sliding-window v13 is the recommended path — see --long-model windows)",
+              file=sys.stderr)
         with _hush():
             mil = RNAPhaseekMILScorer(mil_m, mil_n, quiet=a.quiet)
             pl = mil.score([seqs[i] for i in long_idx])
@@ -297,9 +385,23 @@ def cmd_score(a):
     out = sys.stdout if a.out is None else open(a.out, "w", newline="")
     csv.writer(out).writerows(rows)
     if a.out: print(f"[rnaphaseek] wrote {n} scores -> {a.out}", file=sys.stderr)
+
+    if per_window_rows:
+        with open(a.per_window_out, "w", newline="") as pw_f:
+            w = csv.writer(pw_f)
+            w.writerow(("id", "win_start", "win_end", "P_window"))
+            w.writerows(per_window_rows)
+        print(f"[rnaphaseek] wrote {len(per_window_rows)} per-window scores -> {a.per_window_out}",
+              file=sys.stderr)
+
     parr = np.array(probs)
     n_pos = int((parr >= a.threshold).sum())
-    note = f" ({len(long_idx)} long via v7 MIL)" if use_mil else ""
+    if use_mil:
+        note = f" ({len(long_idx)} long via v7 MIL)"
+    elif use_windows:
+        note = f" ({len(long_idx)} long via sliding-window v13/{a.aggregate})"
+    else:
+        note = ""
     print(f"[rnaphaseek] {n_pos}/{n} predicted LLPS at threshold {a.threshold} "
           f"(mean P={parr.mean():.3f}){note}", file=sys.stderr)
 
@@ -387,10 +489,19 @@ def main():
     s.add_argument("input", help="FASTA file (or '-' for stdin)")
     s.add_argument("-o", "--out", help="output CSV (default: stdout)")
     s.add_argument("-t", "--threshold", type=float, default=0.5)
-    s.add_argument("--long-model", choices=["truncate", "mil"], default="truncate",
-                   help=f"how to score RNAs >{MAX_CTX}nt: truncate=v6 on the first 1022nt (default; "
-                        "held-out tests show no accuracy loss); mil=v7 attention-MIL full-length "
-                        "(opt-in; no accuracy gain, for full-length transparency)")
+    s.add_argument("--long-model", choices=["truncate", "windows", "mil"], default="truncate",
+                   help=f"how to score RNAs >{MAX_CTX}nt: truncate=v13 on the first 1022nt (default; "
+                        "held-out tests show no accuracy loss); windows=tile into 1022nt windows, score "
+                        "each with v13, aggregate (recommended for full-length transparency); "
+                        "mil=v7 attention-MIL (legacy; positively biased on long sequences)")
+    s.add_argument("--window-stride", type=int, default=822,
+                   help="window step for --long-model windows (default 822 = 200 nt overlap)")
+    s.add_argument("--aggregate", choices=["max", "top3_mean", "mean"], default="max",
+                   help="per-window aggregation for --long-model windows: "
+                        "max=is any region LLPS-conducive (default); top3_mean=robust localized signal; "
+                        "mean=whole RNA on average")
+    s.add_argument("--per-window-out", default=None,
+                   help="optional CSV path: emit per-window scores (id, win_start, win_end, P_window)")
     s.add_argument("--uncertainty", action="store_true",
                    help="4-model ensemble: report ens_std + ABSTAIN to flag out-of-distribution inputs")
     s.add_argument("--abstain-threshold", type=float, default=0.05,
