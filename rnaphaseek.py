@@ -27,10 +27,18 @@ import paths  # project path bootstrap (see paths.py)
 
 DEFAULT_MODEL = "model/production/final_model.pt"
 DEFAULT_NORM  = "model/production/norm_stats.npz"
-# Additional ensemble-member checkpoints are archived externally (only the
-# production model is kept locally). --uncertainty and --long-model mil need them;
-# pass --ensemble-from <root> or set RNAPHASEEK_ENSEMBLE_ROOT to override.
-DEFAULT_ENSEMBLE_ROOT = "/Volumes/LaCie/RNAPhaseek_scripts/model"
+# Ensemble-member checkpoints (v6, v6_orgbalanced, v7_mil) live alongside the
+# production weights in model/. If the local model/ directory is missing those
+# subdirs (e.g. on a stripped checkout), fall back to the LaCie archive.
+# Override with --ensemble-from <root> or RNAPHASEEK_ENSEMBLE_ROOT.
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_LOCAL_MODEL_ROOT = os.path.join(_SCRIPT_DIR, "model")
+_LACIE_FALLBACK = "/Volumes/LaCie/Amir M./RNAPhaseek/RNAPhaseek_scripts/model/production_ensemble"
+DEFAULT_ENSEMBLE_ROOT = (
+    _LOCAL_MODEL_ROOT
+    if os.path.isdir(os.path.join(_LOCAL_MODEL_ROOT, "strict_eval_v7_mil"))
+    else _LACIE_FALLBACK
+)
 MAX_CTX = 1022  # RNA-FM context window; the model silently truncates longer sequences
 
 
@@ -53,10 +61,10 @@ def _require_files(paths, feature, root):
     if miss:
         sys.exit(
             f"[rnaphaseek] {feature} needs these files but they are missing:\n  " + "\n  ".join(miss) +
-            f"\n\nThe v6/v6_orgbalanced/v7_mil checkpoints are archived to {DEFAULT_ENSEMBLE_ROOT}. "
-            f"Mount the LaCie drive (or set RNAPHASEEK_ENSEMBLE_ROOT / pass --ensemble-from <root>) "
-            f"to point at a directory containing strict_eval_v6_production/, strict_eval_v6_orgbalanced/, "
-            f"and strict_eval_v7_mil/.\nCurrent --ensemble-from = {root!r}")
+            f"\n\nExpected ensemble members (strict_eval_v6_production/, strict_eval_v6_orgbalanced/, "
+            f"strict_eval_v7_mil/) under {root!r}.\n"
+            f"Default search path: {DEFAULT_ENSEMBLE_ROOT}\n"
+            f"Override with --ensemble-from <root> or the RNAPHASEEK_ENSEMBLE_ROOT env var.")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -7,6 +7,16 @@ model/production/model_card.json
 model/production/RESULT.md
 model/production/den_*_summary.json
 
+# --- Ensemble-member checkpoints (live alongside production; same policy) ---
+# weights are covered by the *.pt / *.npz globs below;
+# the per-model metadata (logs, eval summaries, model cards) stays local-only
+model/strict_eval_v6_production/*.json
+model/strict_eval_v6_production/*.log
+model/strict_eval_v6_orgbalanced/*.json
+model/strict_eval_v6_orgbalanced/*.log
+model/strict_eval_v7_mil/*.json
+model/strict_eval_v7_mil/*.log
+
 # Any other large model files that might accidentally be added later
 *.pt
 *.npz
