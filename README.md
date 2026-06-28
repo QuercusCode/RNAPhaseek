@@ -31,22 +31,39 @@ The fastest path for new users: open [`notebooks/RNAPhaseek_colab.ipynb`](notebo
 
 ---
 
-## Quick start (local)
-
-All scripts run **from the project root** with the project conda env:
+## Installation
 
 ```bash
-PY=/opt/homebrew/Caskroom/mambaforge/base/envs/rnaphaseek/bin/python
+# clone the repo
+git clone https://github.com/QuercusCode/RNAPhaseek.git
+cd RNAPhaseek
+
+# create the conda environment
+conda create -n rnaphaseek python=3.10 -y
+conda activate rnaphaseek
+pip install -r requirements.txt
+```
+
+Model weights are downloaded automatically from [Hugging Face Hub](https://huggingface.co/quercuscode/rnaphaseek) on first run.
+
+---
+
+## Quick start (local)
+
+All commands run **from the project root** with the conda env activated:
+
+```bash
+conda activate rnaphaseek
 
 # score arbitrary RNA for P(LLPS)
-$PY rnaphaseek.py score my_rnas.fasta -o scores.csv
+python rnaphaseek.py score my_rnas.fasta -o scores.csv
 
 # design new phase-separating RNA
-$PY rnaphaseek.py design --method ga  -o ga_designs.fasta     # one optimal motif + variants
-$PY rnaphaseek.py design --method den -o den_library.fasta    # diverse library
+python rnaphaseek.py design --method ga  -o ga_designs.fasta     # one optimal motif + variants
+python rnaphaseek.py design --method den -o den_library.fasta    # diverse library
 
 # trustworthiness: is a design structure-driven or a composition artifact?
-$PY rnaphaseek.py validate den_library.fasta -o trust.csv
+python rnaphaseek.py validate den_library.fasta -o trust.csv
 ```
 
 ---
@@ -61,3 +78,9 @@ specificity blind spot of earlier recipes. It is a strong yeast predictor (0.91)
 transfer to other organisms (0.80); its one real limit — cross-organism generalization — is
 a **data-scarcity** constraint of the field, not a modeling one. Predictions are
 *model-believed* candidates awaiting experimental validation.
+
+---
+
+## License
+
+This project is licensed under the terms of the [MIT License](LICENSE).
