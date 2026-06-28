@@ -2,8 +2,8 @@
 """
 RNAPhaseek — command-line tool for RNA-self-LLPS prediction and de novo design.
 
-Wraps the production model (model/production/) and the GA/DEN
-generators behind three subcommands:
+Wraps the RNAPhaseek model (model/) and the GA/DEN generators behind three
+subcommands:
 
   score     Predict P(LLPS) for each RNA in a FASTA.
               rnaphaseek score input.fasta -o scores.csv
@@ -25,20 +25,14 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import paths  # project path bootstrap (see paths.py)
 
-DEFAULT_MODEL = "model/production/final_model.pt"
-DEFAULT_NORM  = "model/production/norm_stats.npz"
-# Ensemble-member checkpoints (v6, v6_orgbalanced, v7_mil) live alongside the
-# production weights in model/. If the local model/ directory is missing those
-# subdirs (e.g. on a stripped checkout), fall back to the LaCie archive.
-# Override with --ensemble-from <root> or RNAPHASEEK_ENSEMBLE_ROOT.
+DEFAULT_MODEL = "model/final_model.pt"
+DEFAULT_NORM  = "model/norm_stats.npz"
+# Optional ensemble-member checkpoints live under model/ensemble/{a,b,c}. They
+# are only used in --uncertainty mode. Override with --ensemble-from <root> or
+# the RNAPHASEEK_ENSEMBLE_ROOT environment variable.
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 _LOCAL_MODEL_ROOT = os.path.join(_SCRIPT_DIR, "model")
-_LACIE_FALLBACK = "/Volumes/LaCie/Amir M./RNAPhaseek/RNAPhaseek_scripts/model/production_ensemble"
-DEFAULT_ENSEMBLE_ROOT = (
-    _LOCAL_MODEL_ROOT
-    if os.path.isdir(os.path.join(_LOCAL_MODEL_ROOT, "strict_eval_v7_mil"))
-    else _LACIE_FALLBACK
-)
+DEFAULT_ENSEMBLE_ROOT = _LOCAL_MODEL_ROOT
 MAX_CTX = 1022  # RNA-FM context window; the model silently truncates longer sequences
 
 
@@ -48,12 +42,12 @@ def _resolve_ensemble_root(a):
 
 def _ensemble_paths(root):
     return [(DEFAULT_MODEL, DEFAULT_NORM),
-            (f"{root}/strict_eval_v6_production/final_model.pt",  f"{root}/strict_eval_v6_production/norm_stats.npz"),
-            (f"{root}/strict_eval_v6_orgbalanced/final_model.pt", f"{root}/strict_eval_v6_orgbalanced/norm_stats.npz")]
+            (f"{root}/ensemble/a/final_model.pt", f"{root}/ensemble/a/norm_stats.npz"),
+            (f"{root}/ensemble/b/final_model.pt", f"{root}/ensemble/b/norm_stats.npz")]
 
 
-def _mil_paths(root):
-    return (f"{root}/strict_eval_v7_mil/final_model.pt", f"{root}/strict_eval_v7_mil/norm_stats.npz")
+def _long_scorer_paths(root):
+    return (f"{root}/ensemble/c/final_model.pt", f"{root}/ensemble/c/norm_stats.npz")
 
 
 def _require_files(paths, feature, root):
@@ -61,14 +55,13 @@ def _require_files(paths, feature, root):
     if miss:
         sys.exit(
             f"[rnaphaseek] {feature} needs these files but they are missing:\n  " + "\n  ".join(miss) +
-            f"\n\nExpected ensemble members (strict_eval_v6_production/, strict_eval_v6_orgbalanced/, "
-            f"strict_eval_v7_mil/) under {root!r}.\n"
+            f"\n\nExpected ensemble member checkpoints under {root!r}.\n"
             f"Default search path: {DEFAULT_ENSEMBLE_ROOT}\n"
             f"Override with --ensemble-from <root> or the RNAPHASEEK_ENSEMBLE_ROOT env var.")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Core scorer (loads the v6 model + normalization once; scores any list of RNAs)
+# Core scorer (loads the model + normalization once; scores any list of RNAs)
 # ─────────────────────────────────────────────────────────────────────────────
 class RNAPhaseekScorer:
     def __init__(self, model_path=DEFAULT_MODEL, norm_path=DEFAULT_NORM, quiet=True):
@@ -127,15 +120,14 @@ class RNAPhaseekScorer:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# v7 attention-MIL scorer for LONG (>1022nt) RNAs: tiles into <=1022nt windows
-# (stride 512), encodes each with RNA-FM, attention-pools over windows so the
-# whole molecule contributes — instead of v6 silently truncating to the first 1022nt.
-# (No FEGS bias in the fullseq MIL variant, so this is RNA-FM + biophysics only.)
+# Long-sequence ensemble member (legacy attention-pooled variant). Used only as
+# a member of the --uncertainty ensemble; the public scoring path for long
+# sequences uses sliding-window inference on the main model.
 # ─────────────────────────────────────────────────────────────────────────────
-class RNAPhaseekMILScorer:
+class RNAPhaseekLongScorer:
     def __init__(self, model_path=None, norm_path=None, quiet=True):
-        if model_path is None: model_path = f"{DEFAULT_ENSEMBLE_ROOT}/strict_eval_v7_mil/final_model.pt"
-        if norm_path  is None: norm_path  = f"{DEFAULT_ENSEMBLE_ROOT}/strict_eval_v7_mil/norm_stats.npz"
+        if model_path is None: model_path = f"{DEFAULT_ENSEMBLE_ROOT}/ensemble/c/final_model.pt"
+        if norm_path  is None: norm_path  = f"{DEFAULT_ENSEMBLE_ROOT}/ensemble/c/norm_stats.npz"
         import torch, multimolecule  # noqa
         from transformers import AutoTokenizer
         from Functions.RNAPhaseek.RNAPhaseek_hybrid_fullseq        import RNAFMHybridFullSeq
@@ -152,7 +144,7 @@ class RNAPhaseekMILScorer:
         nz = np.load(norm_path); self.m = nz["mean"].astype(np.float32); self.sd = nz["std"].astype(np.float32)
         self.ext = RNABiophysicalExtractor(normalize=False)
         if not quiet:
-            print(f"[rnaphaseek] loaded MIL model {model_path} on {self.device}", file=sys.stderr)
+            print(f"[rnaphaseek] loaded ensemble member from {model_path} on {self.device}", file=sys.stderr)
 
     @staticmethod
     def _norm_seq(s):
@@ -200,10 +192,9 @@ def _gc(s):
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Sliding-window scoring for sequences > MAX_CTX: tile into 1022-nt windows,
-# score each one with the production v13 scorer (which carries the matched-pair
-# structure-specificity guarantee), then aggregate. Lets long RNAs benefit from
-# the same head that's validated on the matched-pair benchmark — rather than
-# routing to MIL, which is positively biased and not matched-pair-validated.
+# score each one with the model, then aggregate (MAX by default). Lets long
+# RNAs benefit from the same head that's validated on the matched-pair
+# structure-specificity benchmark.
 # ─────────────────────────────────────────────────────────────────────────────
 def _window_starts(L, window=MAX_CTX, stride=None, min_step=50):
     """Window start positions covering a sequence of length L. The last window
@@ -280,26 +271,26 @@ def _hush():
 # Subcommands
 # ─────────────────────────────────────────────────────────────────────────────
 # 4 independently-trained checkpoints; disagreement = epistemic uncertainty / OOD signal.
-# Production model + 3 archived ensemble members resolved at call-time through
-# _resolve_ensemble_root(a) so the heavier members can live on external storage.
+# Ensemble members resolved at call-time through _resolve_ensemble_root(a) so
+# the heavier checkpoints can live on external storage.
 
 
 def _ensemble_probs(seqs, root, quiet=True):
-    """Score with the 4-model ensemble -> [4, n] probabilities (for uncertainty/abstention)."""
+    """Score with the 4-checkpoint ensemble -> [4, n] probabilities (for uncertainty/abstention)."""
     ENSEMBLE = _ensemble_paths(root)
-    mil_m, mil_n = _mil_paths(root)
-    _require_files([p for pair in ENSEMBLE for p in pair] + [mil_m, mil_n], "--uncertainty mode", root)
+    long_m, long_n = _long_scorer_paths(root)
+    _require_files([p for pair in ENSEMBLE for p in pair] + [long_m, long_n], "--uncertainty mode", root)
     rows = []
     with _hush():
         for mp_, np_ in ENSEMBLE:
             rows.append(RNAPhaseekScorer(mp_, np_, quiet=quiet).score(seqs))
-        rows.append(RNAPhaseekMILScorer(mil_m, mil_n, quiet=quiet).score(seqs))
+        rows.append(RNAPhaseekLongScorer(long_m, long_n, quiet=quiet).score(seqs))
     return np.vstack(rows)
 
 
 def _cmd_score_uncertainty(a, recs, seqs):
     root = _resolve_ensemble_root(a)
-    print(f"[rnaphaseek] uncertainty mode: 4-model ensemble (production local + 3 members from {root}) ...", file=sys.stderr)
+    print(f"[rnaphaseek] uncertainty mode: 4-checkpoint ensemble (members under {root}) ...", file=sys.stderr)
     ens = _ensemble_probs(seqs, root, quiet=a.quiet)
     mean, std = ens.mean(0), ens.std(0)
     thr = a.abstain_threshold
@@ -326,57 +317,41 @@ def cmd_score(a):
         return _cmd_score_uncertainty(a, recs, seqs)
     short_set = {i for i in range(n) if len(seqs[i]) <= MAX_CTX}
     long_idx = [i for i in range(n) if i not in short_set]
-    use_mil = (a.long_model == "mil") and bool(long_idx)
     use_windows = (a.long_model == "windows") and bool(long_idx)
     if long_idx and a.long_model == "truncate":
         print(f"[rnaphaseek] note: {len(long_idx)} sequence(s) >{MAX_CTX}nt scored on their first "
-              f"{MAX_CTX}nt only (held-out tests show no accuracy loss vs full-length). "
-              f"Use --long-model windows for sliding-window v13 (recommended for full-length transparency) "
-              f"or --long-model mil for the v7 MIL scorer.", file=sys.stderr)
+              f"{MAX_CTX}nt only. Use --long-model windows for sliding-window scoring over the "
+              f"full sequence.", file=sys.stderr)
     probs = [0.0] * n; models = [""] * n
     per_window_rows = []  # only populated under --long-model windows
 
-    # Production model scores all short RNAs; also long ones if --long-model {truncate,windows}
+    # Model scores all short RNAs; also long ones if --long-model truncate
     short_targets = sorted(short_set)
-    long_via_prod = [] if (use_mil or use_windows) else long_idx
-    prod_targets = short_targets + long_via_prod
-    if prod_targets or use_windows:
+    long_via_main = [] if use_windows else long_idx
+    main_targets = short_targets + long_via_main
+    if main_targets or use_windows:
         with _hush():
             sc = RNAPhaseekScorer(a.model, a.norm, quiet=a.quiet)
-        if prod_targets:
+        if main_targets:
             with _hush():
-                ps = sc.score([seqs[i] for i in prod_targets])
-            for i, p in zip(prod_targets, ps):
-                probs[i] = float(p); models[i] = "production" if i in short_set else "production_trunc"
+                ps = sc.score([seqs[i] for i in main_targets])
+            for i, p in zip(main_targets, ps):
+                probs[i] = float(p); models[i] = "model" if i in short_set else "model_trunc"
         if use_windows:
             stride = a.window_stride
-            print(f"[rnaphaseek] {len(long_idx)} sequence(s) >{MAX_CTX}nt -> sliding-window v13 "
-                  f"(window={MAX_CTX}, stride={stride}, aggregate={a.aggregate})", file=sys.stderr)
+            print(f"[rnaphaseek] {len(long_idx)} sequence(s) >{MAX_CTX}nt -> sliding-window "
+                  f"(window={MAX_CTX}, stride={stride})", file=sys.stderr)
             with _hush():
                 agg, per_w = _score_windowed(
                     sc, [seqs[i] for i in long_idx],
                     window=MAX_CTX, stride=stride, aggregate=a.aggregate)
             for k, i in enumerate(long_idx):
                 probs[i] = float(agg[k])
-                models[i] = f"windows_{a.aggregate}({len(per_w[k])})"
+                models[i] = f"windows({len(per_w[k])})"
                 if a.per_window_out:
                     sid = recs[i][0].split()[0]
                     for st, en, pw in per_w[k]:
                         per_window_rows.append((sid, st, en, f"{pw:.4f}"))
-
-    # Attention-MIL scores long RNAs full-length (legacy / comparison path)
-    if use_mil:
-        root = _resolve_ensemble_root(a)
-        mil_m, mil_n = _mil_paths(root)
-        _require_files([mil_m, mil_n], "--long-model mil", root)
-        print(f"[rnaphaseek] {len(long_idx)} sequence(s) >{MAX_CTX}nt -> MIL from {root} "
-              f"(legacy; sliding-window v13 is the recommended path — see --long-model windows)",
-              file=sys.stderr)
-        with _hush():
-            mil = RNAPhaseekMILScorer(mil_m, mil_n, quiet=a.quiet)
-            pl = mil.score([seqs[i] for i in long_idx])
-        for i, p in zip(long_idx, pl):
-            probs[i] = float(p); models[i] = "mil"
 
     rows = [("id", "length", "GC_percent", "P_LLPS", "model", f"call@{a.threshold}")]
     for i, (h, _) in enumerate(recs):
@@ -396,12 +371,7 @@ def cmd_score(a):
 
     parr = np.array(probs)
     n_pos = int((parr >= a.threshold).sum())
-    if use_mil:
-        note = f" ({len(long_idx)} long via v7 MIL)"
-    elif use_windows:
-        note = f" ({len(long_idx)} long via sliding-window v13/{a.aggregate})"
-    else:
-        note = ""
+    note = f" ({len(long_idx)} long via sliding-window)" if use_windows else ""
     print(f"[rnaphaseek] {n_pos}/{n} predicted LLPS at threshold {a.threshold} "
           f"(mean P={parr.mean():.3f}){note}", file=sys.stderr)
 
@@ -410,15 +380,14 @@ def cmd_design(a):
     if a.method == "den":
         # DEN is gradient-based; delegate to the dedicated generator script.
         print(f"[rnaphaseek] running DEN (diverse library, length={a.length}) ...", file=sys.stderr)
-        cmd = [sys.executable, "scripts/generation/den_design_v6.py", "--length", str(a.length)]
+        cmd = [sys.executable, "scripts/generation/den_design.py", "--length", str(a.length)]
         if a.out:
             cmd += ["--out", a.out]
         subprocess.run(cmd, check=True)
-        dest = a.out or ("outputs/designs/designed_den_v6.fasta" if a.length == 200
-                         else f"outputs/designs/designed_den_{a.length}nt.fasta")
+        dest = a.out or f"outputs/designs/designed_den_{a.length}nt.fasta"
         print(f"[rnaphaseek] DEN designs -> {dest}", file=sys.stderr)
         return
-    # ── GA: optimize the production scorer's P(LLPS) (full-pipeline fitness) ──
+    # ── GA: optimize the model's P(LLPS) (full-pipeline fitness) ──
     with _hush():
         sc = RNAPhaseekScorer(a.model, a.norm, quiet=a.quiet)
     L, POP, GEN, ELITE, MUT, TOURN = a.length, 64, a.generations, 10, 0.04, 3
@@ -445,7 +414,7 @@ def cmd_design(a):
         pop = newpop
     top = sorted(set(pop), key=lambda s: -cache.get(s, 0))[:a.n]
     out = sys.stdout if a.out is None else open(a.out, "w")
-    for i, s in enumerate(top): out.write(f">rnaphaseek_ga_{i}_P{cache[s]:.3f}\n{s}\n")
+    for i, s in enumerate(top): out.write(f">rnaphaseek_design_{i}_P{cache[s]:.3f}\n{s}\n")
     if a.out: print(f"[rnaphaseek] wrote {len(top)} GA designs -> {a.out}", file=sys.stderr)
 
 
@@ -476,12 +445,12 @@ def cmd_validate(a):
 
 def main():
     p = argparse.ArgumentParser(prog="rnaphaseek", description="RNA-self-LLPS prediction & de novo design.")
-    p.add_argument("--model", default=DEFAULT_MODEL, help="model checkpoint (default: production)")
-    p.add_argument("--norm", default=DEFAULT_NORM, help="biophysics norm_stats.npz")
+    p.add_argument("--model", default=DEFAULT_MODEL, help="model checkpoint path (default: model/)")
+    p.add_argument("--norm", default=DEFAULT_NORM, help="biophysics norm_stats.npz path")
     p.add_argument("--ensemble-from", default=None, dest="ensemble_from",
-                   help=f"root dir containing the archived ensemble-member checkpoints "
-                        f"(needed for --uncertainty and --long-model mil; "
-                        f"default {DEFAULT_ENSEMBLE_ROOT}, also overridable via RNAPHASEEK_ENSEMBLE_ROOT)")
+                   help=f"root directory containing the optional ensemble-member checkpoints "
+                        f"(needed only for --uncertainty mode; default {DEFAULT_ENSEMBLE_ROOT}, "
+                        f"also overridable via RNAPHASEEK_ENSEMBLE_ROOT)")
     p.add_argument("--quiet", action="store_true", help="suppress model-load chatter")
     sub = p.add_subparsers(dest="cmd", required=True)
 
@@ -489,23 +458,20 @@ def main():
     s.add_argument("input", help="FASTA file (or '-' for stdin)")
     s.add_argument("-o", "--out", help="output CSV (default: stdout)")
     s.add_argument("-t", "--threshold", type=float, default=0.5)
-    s.add_argument("--long-model", choices=["truncate", "windows", "mil"], default="truncate",
-                   help=f"how to score RNAs >{MAX_CTX}nt: truncate=v13 on the first 1022nt (default; "
-                        "held-out tests show no accuracy loss); windows=tile into 1022nt windows, score "
-                        "each with v13, aggregate (recommended for full-length transparency); "
-                        "mil=v7 attention-MIL (legacy; positively biased on long sequences)")
+    s.add_argument("--long-model", choices=["truncate", "windows"], default="windows",
+                   help=f"how to score RNAs >{MAX_CTX}nt: windows=tile into overlapping "
+                        f"{MAX_CTX}-nt windows and report the highest per-window score (default); "
+                        f"truncate=score only the first {MAX_CTX} nt")
     s.add_argument("--window-stride", type=int, default=822,
                    help="window step for --long-model windows (default 822 = 200 nt overlap)")
     s.add_argument("--aggregate", choices=["max", "top3_mean", "mean"], default="max",
-                   help="per-window aggregation for --long-model windows: "
-                        "max=is any region LLPS-conducive (default); top3_mean=robust localized signal; "
-                        "mean=whole RNA on average")
+                   help=argparse.SUPPRESS)
     s.add_argument("--per-window-out", default=None,
                    help="optional CSV path: emit per-window scores (id, win_start, win_end, P_window)")
     s.add_argument("--uncertainty", action="store_true",
-                   help="4-model ensemble: report ens_std + ABSTAIN to flag out-of-distribution inputs")
+                   help="4-checkpoint ensemble: report ens_std + ABSTAIN to flag out-of-distribution inputs")
     s.add_argument("--abstain-threshold", type=float, default=0.05,
-                   help="ens_std above this -> ABSTAIN (default 0.05; in-dist designs ~0.02, OOD kissing-loops ~0.15)")
+                   help="ens_std above this -> ABSTAIN (default 0.05)")
     s.set_defaults(func=cmd_score)
 
     d = sub.add_parser("design", help="generate de novo phase-separating RNA")

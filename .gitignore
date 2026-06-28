@@ -1,21 +1,14 @@
-# --- Production weights (live on Hugging Face Hub, too large for GitHub) ---
-model/production/final_model.pt
-model/production/norm_stats.npz
+# --- Model weights (live on Hugging Face Hub, too large for GitHub) ---
+model/final_model.pt
+model/norm_stats.npz
 
-# --- Internal training / version-tracking artifacts (kept locally only) ---
-model/production/model_card.json
-model/production/RESULT.md
-model/production/den_*_summary.json
+# --- Internal training / metadata artifacts (kept locally only) ---
+model/model_card.json
+model/RESULT.md
+model/den_*_summary.json
 
-# --- Ensemble-member checkpoints (live alongside production; same policy) ---
-# weights are covered by the *.pt / *.npz globs below;
-# the per-model metadata (logs, eval summaries, model cards) stays local-only
-model/strict_eval_v6_production/*.json
-model/strict_eval_v6_production/*.log
-model/strict_eval_v6_orgbalanced/*.json
-model/strict_eval_v6_orgbalanced/*.log
-model/strict_eval_v7_mil/*.json
-model/strict_eval_v7_mil/*.log
+# --- Optional ensemble-member checkpoints (same policy as the main model) ---
+model/ensemble/
 
 # Any other large model files that might accidentally be added later
 *.pt

@@ -1,19 +1,12 @@
 """
-Genetic-algorithm de novo LLPS RNA design.
+Genetic-algorithm de novo design against the RNAPhaseek model.
 
-Unlike SeqProp (gradient through a bio-zero proxy), the GA scores every
-candidate with the FULL v3 pipeline (real 33-dim biophysical features + FEGS
-structure), and is population-based so it explores diverse solutions rather
-than collapsing to a single attractor.
+Fitness uses the full pipeline (38-dim biophysics including the 5
+self-complementarity features + FEGS + forward), so the GA evolves
+structurally-grounded designs — verified afterwards by the
+design-vs-scramble structure-dependence check.
 
-  initialize random population
-  for each generation:
-    score all (full model) -> fitness = P(LLPS)
-    keep elites; breed the rest via tournament-select + 2-point crossover + mutation
-  report best + diverse designs, convergence curve, composition.
-
-Run:
-  python ga_design.py
+  /opt/homebrew/Caskroom/mambaforge/base/envs/rnaphaseek/bin/python ga_design.py
 """
 import os, sys, json, random, tempfile
 import numpy as np, torch
@@ -22,7 +15,6 @@ import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from pathlib import Path
 from collections import Counter
-from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer
 from torch.utils.data import DataLoader
 sys.path.insert(0, os.getcwd())
@@ -33,34 +25,23 @@ from Functions.RNAPhaseek.RNAPhaseek_utils         import list_npz_sorted, setup
 from Functions.RNA_biophysical                     import RNABiophysicalExtractor
 from Functions.precompute_fegs                     import process_fasta
 
-FINAL = "model/strict_eval_v3aug/final_model.pt"
+FINAL = "model/final_model.pt"
+NORM  = "model/norm_stats.npz"
 BASES = "ACGU"
-# ── GA hyperparameters ──
 POP, GEN, L = 64, 40, 200
 ELITE, MUT, TOURN = 10, 0.04, 3
 SEED = 0
 
 
-def recover_norm():
-    pos = read_fasta("Data/raw/multispecies/strict_pool_v3_positives.fasta")
-    neg = read_fasta("Data/raw/multispecies/strict_pool_v3_negatives_all.fasta")
-    y = np.concatenate([np.ones(len(pos)), np.zeros(len(neg))]).astype(int)
-    bio = np.vstack([np.load("Data/splits/biophys_strict_v3_pos.npy"),
-                     np.load("Data/splits/biophys_strict_v3_neg.npy")]).astype(np.float32)
-    dev, _ = train_test_split(np.arange(len(y)), test_size=0.15, random_state=999, stratify=y)
-    f_tr, _ = train_test_split(dev, test_size=0.15, random_state=7, stratify=y[dev])
-    btr = np.vstack([bio[f_tr], np.load("Data/splits/biophys_synth_train.npy").astype(np.float32)])
-    return btr.mean(0), btr.std(0).clip(min=1e-8)
-
-
 def main():
     set_seed(SEED); random.seed(SEED); np.random.seed(SEED)
     device = setup_device()
-    args = HybridTrainArgs(bio_dim=33, use_species_embed=False, unfreeze_last_n=2, freeze_backbone=False)
+    args = HybridTrainArgs(bio_dim=38, use_species_embed=False, unfreeze_last_n=2, freeze_backbone=False)
     model = RNAFMHybridClassifier(args).to(device).eval()
     model.load_state_dict(torch.load(FINAL, map_location=device, weights_only=True))
     tok = AutoTokenizer.from_pretrained(args.backbone, trust_remote_code=True)
-    m, sd = recover_norm(); ext = RNABiophysicalExtractor(normalize=False)
+    nz = np.load(NORM); m, sd = nz["mean"].astype(np.float32), nz["std"].astype(np.float32)
+    ext = RNABiophysicalExtractor(normalize=False)
 
     def score_batch(seqs):
         if not seqs: return np.array([])
@@ -87,14 +68,12 @@ def main():
     def mutate(s):
         return "".join(random.choice(BASES) if random.random() < MUT else c for c in s)
     def crossover(a, b):
-        i, j = sorted(random.sample(range(1, L), 2))
-        return a[:i] + b[i:j] + a[j:]
+        i, j = sorted(random.sample(range(1, L), 2)); return a[:i] + b[i:j] + a[j:]
     def tournament(pop, fit):
-        cand = random.sample(range(len(pop)), TOURN)
-        return pop[max(cand, key=lambda i: fit[i])]
+        cand = random.sample(range(len(pop)), TOURN); return pop[max(cand, key=lambda i: fit[i])]
 
     pop = ["".join(random.choice(BASES) for _ in range(L)) for _ in range(POP)]
-    cache = {}; history = []
+    cache, history = {}, []
     for g in range(GEN):
         new = [s for s in pop if s not in cache]
         for s, p in zip(new, score_batch(new)): cache[s] = float(p)
@@ -109,35 +88,31 @@ def main():
             newpop.append(mutate(crossover(tournament(pop, fit), tournament(pop, fit))))
         pop = newpop
 
-    # Final: top diverse designs
     final = sorted(set(pop), key=lambda s: -cache.get(s, 0))
     top = final[:10]
     print("\n=== TOP GA DESIGNS (full-model P(LLPS)) ===")
     print(f"{'P':>6} {'GC%':>4} {'A%':>4} {'C%':>4} {'G%':>4} {'U%':>4}  preview")
     for s in top:
         c = Counter(s); n = len(s)
-        print(f"{cache[s]:>6.3f} {100*(c['G']+c['C'])/n:>4.0f} "
-              f"{100*c['A']/n:>4.0f} {100*c['C']/n:>4.0f} {100*c['G']/n:>4.0f} {100*c['U']/n:>4.0f}  {s[:46]}")
+        print(f"{cache[s]:>6.3f} {100*(c['G']+c['C'])/n:>4.0f} {100*c['A']/n:>4.0f} {100*c['C']/n:>4.0f} "
+              f"{100*c['G']/n:>4.0f} {100*c['U']/n:>4.0f}  {s[:46]}")
 
-    # composition of top-20 vs seqprop reference
-    pool = final[:20]; cc = Counter("".join(pool)); tn = sum(cc.values())
-    print(f"\nGA top-20 mean composition: A={100*cc['A']/tn:.0f}% C={100*cc['C']/tn:.0f}% "
-          f"G={100*cc['G']/tn:.0f}% U={100*cc['U']/tn:.0f}%")
-
+    os.makedirs("outputs/designs", exist_ok=True)
     with open("outputs/designs/designed_ga.fasta", "w") as f:
         for i, s in enumerate(top): f.write(f">ga_design_{i}_P{cache[s]:.3f}\n{s}\n")
-    # convergence figure
     h = np.array(history)
     fig, ax = plt.subplots(figsize=(8, 4.5))
-    ax.plot(h[:, 0], h[:, 1], "-o", ms=3, color="#27ae60", label="best in population")
+    ax.plot(h[:, 0], h[:, 1], "-o", ms=3, color="#16a085", label="best in population")
     ax.plot(h[:, 0], h[:, 2], "-o", ms=3, color="#95a5a6", label="population mean")
     ax.set_xlabel("generation"); ax.set_ylabel("full-model P(LLPS)")
-    ax.set_title("Figure 13 — Genetic-algorithm convergence (full v3 model)", fontweight="bold")
+    ax.set_title("Genetic-algorithm convergence on the RNAPhaseek model", fontweight="bold")
     ax.legend(frameon=False); ax.grid(alpha=0.25, ls="--")
-    fig.savefig("report_assets/fig13_ga_convergence.png", dpi=140, bbox_inches="tight"); plt.close()
+    os.makedirs("report_assets", exist_ok=True)
+    fig.savefig("report_assets/fig_ga_convergence.png", dpi=140, bbox_inches="tight"); plt.close()
+    os.makedirs("outputs/designs", exist_ok=True)
     json.dump({"history": history, "top": [{"seq": s, "P": cache[s]} for s in top]},
-              open("model/strict_eval_v3aug/ga_summary.json", "w"), indent=2)
-    print("\nSaved -> designed_ga.fasta, report_assets/fig13_ga_convergence.png")
+              open("outputs/designs/ga_summary.json", "w"), indent=2)
+    print("\nSaved -> outputs/designs/designed_ga.fasta, report_assets/fig_ga_convergence.png")
 
 
 if __name__ == "__main__":

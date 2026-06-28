@@ -1,17 +1,17 @@
 """
 Deep Exploration Network (DEN) for DIVERSE de novo LLPS RNA design.
 
-SeqProp and the GA both mode-collapsed to a single attractor. DEN trains a
-GENERATOR network G(z) (z ~ N(0,I)) to output sequences that simultaneously
-(a) maximize the v3 model's P(LLPS) and (b) are mutually DIVERSE — via a
-pairwise-similarity penalty across each batch (Linder et al. 2020, Cell Systems).
+DEN trains a generator network G(z) (z ~ N(0,I)) to output sequences that
+simultaneously (a) maximize the model's P(LLPS) and (b) are mutually
+DIVERSE — via a pairwise-similarity penalty across each batch
+(Linder et al. 2020, Cell Systems).
 
 Gradient-based, so fitness uses the differentiable RNA-FM+adapter proxy
-(bio-zero), same as SeqProp; final designs are re-scored with the FULL model.
+(bio-zero); final designs are re-scored with the full model.
 
-  python den_design.py
+  python den_design.py --length 300 --n 12       # diverse library at 300 nt
 """
-import os, sys, json, tempfile
+import os, sys, json, tempfile, argparse
 import numpy as np, torch, torch.nn as nn, torch.nn.functional as F
 import multimolecule  # noqa
 import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
@@ -27,12 +27,19 @@ from Functions.RNAPhaseek.RNAPhaseek_utils    import list_npz_sorted, setup_devi
 from Functions.RNA_biophysical                import RNABiophysicalExtractor
 from Functions.precompute_fegs                import process_fasta
 
-FINAL = "model/strict_eval_v3aug/final_model.pt"
-L, ZDIM, BATCH, STEPS, LR, LAMBDA = 200, 64, 12, 400, 1e-3, 4.0
+FINAL = "model/final_model.pt"
+ZDIM, BATCH, LR, LAMBDA = 64, 12, 1e-3, 4.0
 
 
-def main():
-    set_seed(0); device = setup_device()
+def main(args):
+    L, N, STEPS = args.length, args.n, args.steps
+    if L + 2 > 1022:
+        sys.exit(f"--length {L} exceeds the RNA-FM window (~1020 nt). For longer designs, "
+                 f"score with sliding windows instead of generating in one shot.")
+    out_fa = args.out or f"outputs/designs/designed_den_{L}nt.fasta"
+    fig_p = f"report_assets/fig_den_{L}nt.png"
+    sum_p = f"outputs/designs/den_{L}nt_summary.json"
+    set_seed(args.seed); device = setup_device()
     model = load_hybrid_for_generation(FINAL, device)
     for p in model.parameters(): p.requires_grad_(False)
     W_NT, cls_emb, eos_emb = get_nt_embeddings(model, device)
@@ -81,22 +88,15 @@ def main():
     # ── Sample diverse designs, decode, dedup ──
     G.eval()
     with torch.no_grad():
-        z = torch.randn(160, ZDIM, device=device)
+        z = torch.randn(max(160, 8 * N), ZDIM, device=device)
         idx = G(z).argmax(-1)
     seqs = ["".join(RNA_BASES[i] for i in row.tolist()) for row in idx]
     seqs = list(dict.fromkeys(seqs))                   # dedup exact
     print(f"\nSampled {len(seqs)} unique sequences")
 
-    # ── Re-score with the FULL model + measure diversity ──
-    pos = read_fasta("Data/raw/multispecies/strict_pool_v3_positives.fasta")
-    neg = read_fasta("Data/raw/multispecies/strict_pool_v3_negatives_all.fasta")
-    y = np.concatenate([np.ones(len(pos)), np.zeros(len(neg))]).astype(int)
-    bioall = np.vstack([np.load("Data/splits/biophys_strict_v3_pos.npy"),
-                        np.load("Data/splits/biophys_strict_v3_neg.npy")]).astype(np.float32)
-    dev, _ = train_test_split(np.arange(len(y)), test_size=0.15, random_state=999, stratify=y)
-    f_tr, _ = train_test_split(dev, test_size=0.15, random_state=7, stratify=y[dev])
-    btr = np.vstack([bioall[f_tr], np.load("Data/splits/biophys_synth_train.npy").astype(np.float32)])
-    m, sd = btr.mean(0), btr.std(0).clip(min=1e-8)
+    # ── Re-score with the full model + measure diversity ──
+    nz = np.load("model/norm_stats.npz")
+    m, sd = nz["mean"].astype(np.float32), nz["std"].astype(np.float32)
     ext = RNABiophysicalExtractor(normalize=False)
     tok = AutoTokenizer.from_pretrained(model.args.backbone, trust_remote_code=True)
     d = Path(tempfile.mkdtemp(prefix="fegs_den_")); fa = d / "s.fasta"
@@ -118,35 +118,41 @@ def main():
 
     # Diversity = mean pairwise Hamming identity among top designs
     order = np.argsort(-probs)
-    top = [seqs[i] for i in order[:15]]
+    top = [seqs[i] for i in order[:N]]
     def ident(a, b): return sum(x == y for x, y in zip(a, b)) / len(a)
     ids = [ident(top[i], top[j]) for i in range(len(top)) for j in range(i+1, len(top))]
     mean_ident = float(np.mean(ids)) if ids else 1.0
 
-    print(f"\n=== DEN designs: full-model P(LLPS) mean={probs.mean():.3f} max={probs.max():.3f} ===")
-    print(f"Diversity: mean pairwise identity among top-15 = {mean_ident:.2f}  (lower=more diverse)")
+    print(f"\n=== DEN designs ({L} nt): full-model P(LLPS) mean={probs.mean():.3f} max={probs.max():.3f} ===")
+    print(f"Diversity: mean pairwise identity among top-{N} = {mean_ident:.2f}  (lower=more diverse)")
     print(f"(SeqProp/GA top designs were ~0.9+ identical; DEN target is much lower)")
     print(f"\n{'P':>6} {'GC%':>4} {'U%':>4}  preview")
     for i in order[:10]:
         s = seqs[i]; c = Counter(s); n = len(s)
         print(f"{probs[i]:>6.3f} {100*(c['G']+c['C'])/n:>4.0f} {100*c['U']/n:>4.0f}  {s[:48]}")
 
-    with open("outputs/designs/designed_den.fasta", "w") as f:
-        for i in order[:15]: f.write(f">den_design_{i}_P{probs[i]:.3f}\n{seqs[i]}\n")
+    with open(out_fa, "w") as f:
+        for i in order[:N]: f.write(f">den_design_{i}_P{probs[i]:.3f}\n{seqs[i]}\n")
     h = np.array(hist)
     fig, ax = plt.subplots(figsize=(8, 4.5))
     ax.plot(h[:, 0], h[:, 1], "-o", ms=3, color="#8e44ad", label="mean fitness (proxy)")
     ax2 = ax.twinx(); ax2.plot(h[:, 0], h[:, 2], "-s", ms=3, color="#e67e22", label="pairwise similarity")
     ax.set_xlabel("DEN training step"); ax.set_ylabel("fitness", color="#8e44ad")
     ax2.set_ylabel("pairwise similarity (lower=diverse)", color="#e67e22")
-    ax.set_title("Figure 14 — DEN training: fitness up, diversity maintained", fontweight="bold")
-    fig.savefig("report_assets/fig14_den.png", dpi=140, bbox_inches="tight"); plt.close()
-    json.dump({"mean_full_prob": float(probs.mean()), "max_full_prob": float(probs.max()),
-               "mean_pairwise_identity_top15": mean_ident, "n_unique": len(seqs),
-               "top": [{"seq": seqs[i], "P": float(probs[i])} for i in order[:15]]},
-              open("model/strict_eval_v3aug/den_summary.json", "w"), indent=2)
-    print("\nSaved -> designed_den.fasta, report_assets/fig14_den.png")
+    ax.set_title(f"Figure 14 — DEN training ({L} nt): fitness up, diversity maintained", fontweight="bold")
+    fig.savefig(fig_p, dpi=140, bbox_inches="tight"); plt.close()
+    json.dump({"length": L, "mean_full_prob": float(probs.mean()), "max_full_prob": float(probs.max()),
+               "mean_pairwise_identity_top": mean_ident, "n_designs": N, "n_unique": len(seqs),
+               "top": [{"seq": seqs[i], "P": float(probs[i])} for i in order[:N]]},
+              open(sum_p, "w"), indent=2)
+    print(f"\nSaved -> {out_fa}, {fig_p}")
 
 
 if __name__ == "__main__":
-    main()
+    ap = argparse.ArgumentParser(description="DEN: diverse de novo phase-separating RNA design")
+    ap.add_argument("--length", type=int, default=200, help="design length in nt (<= ~1020)")
+    ap.add_argument("--n", type=int, default=15, help="number of diverse designs to output")
+    ap.add_argument("--steps", type=int, default=400, help="DEN generator training steps")
+    ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--out", default=None, help="output FASTA path (default: length-tagged under outputs/designs/)")
+    main(ap.parse_args())

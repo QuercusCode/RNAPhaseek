@@ -1,7 +1,7 @@
 # RNAPhaseek CLI
 
 Command-line tool for **RNA-self-LLPS prediction and de novo design**, wrapping the
-final accepted model (**v6**, `model/strict_eval_v6_production/`) and the GA/DEN generators.
+RNAPhaseek model (`model/`) and the GA/DEN generators.
 
 Run with the project conda env:
 
@@ -23,27 +23,29 @@ $PY rnaphaseek.py score input.fasta -o scores.csv      # or omit -o for stdout
 $PY rnaphaseek.py score input.fasta -t 0.5             # call threshold
 cat input.fasta | $PY rnaphaseek.py score -            # stdin
 ```
-Output CSV: `id, length, GC_percent, P_LLPS, call@<t>`. Sequences may be RNA or DNA
-(T→U handled), any length (long RNAs are windowed to RNA-FM's 1022-nt context).
+Output CSV: `id, length, GC_percent, P_LLPS, model, call@<t>`. Sequences may be RNA or DNA
+(T→U handled), any length. Sequences longer than 1022 nt are scored by sliding-window
+inference (tile into overlapping 1022-nt windows, score each, take the highest
+per-window score). Add `--per-window-out PATH` to emit per-window scores.
 
 Example:
 ```
-id,length,GC_percent,P_LLPS,call@0.5
-ga_v6_design_0,200,44.5,0.9962,LLPS
-random_control,200,59.0,0.0226,no
-CAG_repeat,180,66.7,0.9698,LLPS
+id,length,GC_percent,P_LLPS,model,call@0.5
+ga_design_0,200,44.5,0.9962,model,LLPS
+random_control,200,59.0,0.0226,model,no
+CAG_repeat,180,66.7,0.9698,model,LLPS
 ```
 
 ## `design` — generate de novo phase-separating RNA
 
 ```bash
 $PY rnaphaseek.py design --method ga  --n 10 --length 200 -o designs.fasta   # one optimal motif + variants
-$PY rnaphaseek.py design --method den --length 200 -o designs.fasta          # diverse library (15)
+$PY rnaphaseek.py design --method den --length 200 -o designs.fasta          # diverse library
 ```
-- **ga** — genetic algorithm optimizing the v6 model's P(LLPS) through the full pipeline.
+- **ga** — genetic algorithm optimizing the model's P(LLPS) through the full pipeline.
   Most structure-grounded (single motif family). Tunable: `--generations`, `--seed`.
 - **den** — Deep Exploration Network (diversity-penalized); a diverse library of distinct
-  scaffolds, still as structure-dependent as real LLPS positives. (Delegates to `den_design_v6.py`.)
+  scaffolds, still as structure-dependent as real LLPS positives.
 
 ## `validate` — trustworthiness (structure-dependence)
 
@@ -59,8 +61,8 @@ Output CSV: `id, P_design, P_scramble_mean, Delta, verdict`.
 ---
 
 ## Notes
-- Default model: `--model model/strict_eval_v6_production/final_model.pt --norm .../norm_stats.npz`
-  (override to score with any compatible 38-dim checkpoint).
+- Default model: `--model model/production/final_model.pt --norm model/production/norm_stats.npz`
+  (override with `--model` / `--norm` to use a compatible checkpoint).
 - Diagnostics print to **stderr**; CSV/FASTA results to **stdout**, so piping is clean.
-- A 5-candidate wet-lab panel (GA top + DEN's diverse scaffolds) is in
-  `designed_ga_v6.fasta` / `designed_den_v6.fasta`.
+- The optional `--uncertainty` mode runs a 4-checkpoint ensemble and reports per-sequence
+  standard deviation across members + an `ABSTAIN` flag for out-of-distribution inputs.

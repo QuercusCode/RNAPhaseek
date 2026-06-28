@@ -1,73 +1,71 @@
-# RNAPhaseek model weights
+---
+license: mit
+tags:
+  - rna
+  - llps
+  - phase-separation
+  - rna-fm
+  - biology
+library_name: pytorch
+---
 
-Self-contained model directory for RNAPhaseek. All four checkpoints needed for
-the production CLI (`rnaphaseek.py`) live here — no LaCie drive required.
+# RNAPhaseek
 
-`rnaphaseek.py` auto-detects this directory as the ensemble root (no env var
-needed) as long as the four subdirectories below exist. If they're missing it
-falls back to the LaCie archive path.
+Predicts the probability that an RNA sequence undergoes **protein-free
+liquid–liquid phase separation (LLPS)**, and powers a de-novo generator
+for new LLPS-prone RNAs.
 
-## Layout
+## Try it (no install)
 
-```
-model/
-├── README.md                          (this file)
-│
-├── production/                        # v13 — DEFAULT scorer (sequences <= 1022 nt)
-│   ├── final_model.pt                 # 426 MB  — production weights
-│   ├── norm_stats.npz                 # biophysics feature mean/std
-│   ├── model_card.json                # full provenance (v13 promotion 2026-06-19)
-│   ├── RESULT.md                      # held-out benchmark vs v6
-│   ├── README.md                      # HuggingFace-style model card
-│   └── den_100nt_summary.json
-│
-├── strict_eval_v6_production/         # v6 — archived predecessor / ensemble member
-│   ├── final_model.pt                 # 426 MB
-│   ├── norm_stats.npz
-│   ├── model_card.json
-│   ├── train.log
-│   ├── den_v6.log, den_v6_summary.json
-│   ├── ga_v6.log
-│   └── design_structure_dependence.json
-│
-├── strict_eval_v6_orgbalanced/        # v6 organism-balanced — ensemble member
-│   ├── final_model.pt                 # 426 MB
-│   ├── norm_stats.npz
-│   ├── eval_summary.json
-│   └── train.log
-│
-└── strict_eval_v7_mil/                # MIL attention pooler for sequences > 1022 nt
-    ├── final_model.pt                 # 426 MB
-    ├── norm_stats.npz
-    ├── eval_summary.json
-    └── train.log
-```
+Open the Colab notebook from the project's GitHub repo for one-click
+scoring and de-novo design.
 
-Total: ~1.7 GB on disk.
+## What's in this repo
 
-## Which model gets used when
+- `final_model.pt` — RNA-FM + FEGSTrans adapter + 38-dim biophysics + MLP head, 426 MB
+- `norm_stats.npz` — biophysics feature mean/std (must accompany the checkpoint)
 
-| CLI invocation | Models loaded |
+## Architecture
+
+Three streams fused in a single MLP head:
+
+1. **RNA-FM backbone** (`multimolecule/rnafm`, 640-dim, last 2 layers fine-tuned)
+2. **FEGSTrans adapter** that pools backbone embeddings with a structural FEGS bias
+3. **38 biophysical features** (MFE, GC%, G4-potential, self-complementarity, etc.)
+
+Trained on a strict protein-free RNA-LLPS corpus (positives + negatives +
+structural hard negatives) plus matched training pairs that teach the model
+the free-vs-sequestered G-tract distinction — closing the structure-specificity
+blind spot of earlier training recipes.
+
+## Headline numbers
+
+| Metric | Value |
 |---|---|
-| `rnaphaseek score in.fa` | `production/` only (v13, single model, <=1022 nt) |
-| `rnaphaseek score in.fa --uncertainty` | `production/` + `strict_eval_v6_production/` + `strict_eval_v6_orgbalanced/` (3-model ensemble) |
-| `rnaphaseek score in.fa --long-model mil` | `production/` for short, `strict_eval_v7_mil/` for >1022 nt |
-| `rnaphaseek score in.fa --uncertainty --long-model mil` | All four models (full ensemble + MIL routing) |
+| 5-fold cluster-grouped CV AUROC          | **0.88** |
+| Structural-specificity AUROC             | **0.90** |
+| Non-yeast generalization AUROC           | **0.80** |
+| Matched-pair accuracy (held-out)         | **1.00** |
 
-## Provenance
+## Programmatic use
 
-- **v13** (PROMOTED 2026-06-19): RNA-FM + FEGSTrans + 38-dim biophysics. Trained on v5/v6 corpus + 83 de-leaked matched training pairs. Closes the structure-specificity gap (matched-pair accuracy 1.00 vs v6 0.67, hard-18 AUROC 0.812 vs 0.612) with no general-corpus regression.
-- **v6_production**: previous production model. Same architecture as v13, trained without matched pairs. Kept for ensemble disagreement / uncertainty.
-- **v6_orgbalanced**: v6 trained with organism-balanced sampler. Ensemble member that improves non-yeast generalization.
-- **v7_mil**: full-sequence attention-MIL variant. Tiles RNAs into <=1022 nt windows (stride 512), encodes each with RNA-FM, attention-pools over windows. Only triggered for sequences > 1022 nt via `--long-model mil`.
+```python
+from huggingface_hub import hf_hub_download
 
-## Git
+model_path = hf_hub_download(repo_id="quercuscode/rnaphaseek", filename="final_model.pt")
+norm_path  = hf_hub_download(repo_id="quercuscode/rnaphaseek", filename="norm_stats.npz")
 
-`*.pt` and `*.npz` are gitignored — weights never get pushed to GitHub. They're hosted on Hugging Face Hub (`quercuscode/rnaphaseek`). Copy this folder manually when transferring between computers.
+# then load with the project code (see the GitHub repo):
+from rnaphaseek import RNAPhaseekScorer, read_fasta
+scorer = RNAPhaseekScorer(model_path=model_path, norm_path=norm_path)
+probs  = scorer.score(["GGGAGGGAGGGAGGGUUUUUUUUUUUUUUU"])
+print(probs)
+```
 
-## Transferring to another computer
+## Citation
 
-1. Copy the whole `model/` directory across (1.7 GB).
-2. That's it — `rnaphaseek.py` finds it automatically. No env var, no LaCie mount.
+If you use RNAPhaseek, please cite the accompanying manuscript (Cheraghali et al.).
 
-If you only want the production model (single-model scoring, no uncertainty, no long sequences), copy `model/production/` alone (426 MB) — the CLI runs fine, the ensemble/MIL flags will surface a clear error pointing you here.
+## License
+
+MIT for the code; weights released for academic use under the same license.

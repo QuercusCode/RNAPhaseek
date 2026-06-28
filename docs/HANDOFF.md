@@ -31,7 +31,7 @@ matched G-quadruplex training pairs that close the structure-specificity gap.
 Training uses CD-HIT cluster-grouped leakage control and organism-balanced
 sampling.
 
-### Production performance (5-fold cluster-grouped CV)
+### Model performance (5-fold cluster-grouped CV)
 
 | Metric | Value |
 |---|---|
@@ -47,7 +47,7 @@ sampling.
 | Location | Purpose | URL / path |
 |---|---|---|
 | **GitHub** | All source code, the Colab notebook, manuscript draft, all docs | https://github.com/QuercusCode/RNAPhaseek |
-| **Hugging Face Hub** | Production model weights (`final_model.pt`, `norm_stats.npz`) | https://huggingface.co/quercuscode/rnaphaseek |
+| **Hugging Face Hub** | Model weights (`final_model.pt`, `norm_stats.npz`) | https://huggingface.co/quercuscode/rnaphaseek |
 | **Local working dir** | Active development | `~/Documents/RNAPhaseek_scripts/` |
 | **LaCie external** | Raw corpus + precomputed features + all training checkpoints | `/Volumes/LaCie/RNAPhaseek_scripts/` |
 | **LaCie OLD backup** | Snapshot from 2026-06-12 (pre-architecture-cleanup, 503 GB) | `/Volumes/LaCie/RNAPhaseek_scripts.OLD_20260612/` |
@@ -71,19 +71,20 @@ conda activate rnaphaseek
 conda install -c bioconda viennarna -y
 pip install -r requirements.txt
 
-# 3. Pull production weights from Hugging Face
+# 3. Pull weights from Hugging Face
 huggingface-cli download quercuscode/rnaphaseek \
     --local-dir model/production \
     --local-dir-use-symlinks False
 
 # 4. Try it
-python rnaphaseek.py score outputs/designs/designed_den_v6.fasta -o /tmp/test_scores.csv
+echo -e ">test\nGGGAGGGAGGGAGGGUUUUUUUUUUUUUUU" > /tmp/test.fa
+python rnaphaseek.py score /tmp/test.fa -o /tmp/test_scores.csv
 cat /tmp/test_scores.csv
 ```
 
 That's enough for **default inference** (`score` / `design` / `validate`). The
-ensemble + long-RNA modes additionally need the LaCie ensemble checkpoints
-mounted (see §5).
+`--uncertainty` mode additionally needs the optional ensemble-member checkpoints
+(see §5).
 
 For users who don't want to install anything, the
 [**one-click Colab notebook**](../notebooks/RNAPhaseek_colab.ipynb) does the
@@ -96,7 +97,7 @@ same thing in the browser.
 ### CLI (the primary interface)
 
 ```bash
-# Score RNA sequences against the production model
+# Score RNA sequences (sliding-window applied automatically for >1022 nt)
 python rnaphaseek.py score input.fasta -o scores.csv
 
 # Design new high-P(LLPS) sequences
@@ -106,11 +107,11 @@ python rnaphaseek.py design --method den -o den.fasta     # diverse library
 # Trustworthiness check (is the high score from structure or composition?)
 python rnaphaseek.py validate designs.fasta -o trust.csv
 
-# Uncertainty / abstention mode (needs LaCie ensemble)
+# Uncertainty / abstention mode (needs the optional ensemble-member checkpoints)
 python rnaphaseek.py score input.fasta --uncertainty -o scores.csv
 
-# Long-RNA MIL mode (full-length scoring, needs LaCie MIL checkpoint)
-python rnaphaseek.py score input.fasta --long-model mil -o scores.csv
+# Per-window detail for long sequences
+python rnaphaseek.py score input.fasta --per-window-out windows.csv -o scores.csv
 ```
 
 Full CLI reference and option list: [`docs/RNAPHASEEK_CLI.md`](RNAPHASEEK_CLI.md).
@@ -131,65 +132,42 @@ exposes:
 
 ## 5. Retraining or re-running experiments
 
-The strict corpus and pre-computed features live on **LaCie**:
+The strict corpus and pre-computed features live in `Data/` (large files may
+be archived on external storage; see [`docs/STRUCTURE.md`](STRUCTURE.md)):
 
-- Strict corpus FASTAs: `/Volumes/LaCie/RNAPhaseek_scripts/Data/raw/multispecies/`
-- Biophysics + FEGS feature caches: `/Volumes/LaCie/RNAPhaseek_scripts/Data/splits/`
+- Strict corpus FASTAs: `Data/raw/multispecies/`
+- Biophysics + FEGS feature caches: `Data/splits/`
 
-Training scripts: [`scripts/training/`](../scripts/training/). Each
-`run_*.py` is a self-contained launcher for one experiment. The CLI tool
-[`rnaphaseek.py`](../rnaphaseek.py) hard-codes the production model path
-and the LaCie ensemble paths; override the ensemble lookup with
-`--ensemble-from <root>` or `RNAPHASEEK_ENSEMBLE_ROOT=<root>`.
+Training scripts: [`scripts/training/`](../scripts/training/). Each launcher
+script is self-contained for one experiment. The CLI tool
+[`rnaphaseek.py`](../rnaphaseek.py) resolves its default model path to
+`model/production/`; the optional ensemble-member checkpoints are looked up
+under `model/`. Override the lookup with `--ensemble-from <root>` or
+`RNAPHASEEK_ENSEMBLE_ROOT=<root>`.
 
-Every completed training run lives in a subdirectory under
-`/Volumes/LaCie/RNAPhaseek_scripts/model/`, organized into themed subdirs:
-
-```
-model/
-├── production_ensemble/    ← the 3 checkpoints the CLI uses (+ top-level symlinks)
-├── development/            ← recent experiments worth re-visiting
-├── historical/             ← earlier checkpoints, kept for provenance
-├── failed_experiments/     ← documented failures (see memory files for why)
-└── pre_v3_legacy/          ← oldest, pre-architecture-overhaul
-```
-
-The full catalogue with one-line descriptions of every directory is in
-[`/Volumes/LaCie/RNAPhaseek_scripts/model/README.md`](file:///Volumes/LaCie/RNAPhaseek_scripts/model/README.md).
+Completed training runs are organized under `model/` into themed subdirs
+(see [`model/README.md`](../model/README.md)).
 
 ---
 
-## 6. The development arc
+## 6. Project summary
 
-The project went through many iterations to reach the current production model.
-Each milestone is documented in a memory file at
-`~/.claude/projects/-Users-synbaiteam-Documents-RNAPhaseek-scripts/memory/`.
-Read them in chronological order if you want the full story:
-
-1. **`v4-specificity-and-kl-ood-finding.md`** — closing the structural-specificity gap; kissing-loop OOD limit
-2. **`v5-dataset-expansion-and-strict-data-ceiling.md`** — 3.16× corpus expansion via Van Treeck re-mine; the strict-data ceiling diagnostic
-3. **`longrange-1022-cap-decisive.md`** — held-out test confirms the 1022-nt cap is genuinely free; MIL is opt-in
-4. **`uncertainty-abstention-catches-ood.md`** — ensemble-disagreement flags the kissing-loop OOD failure
-5. **`new-rna-llps-data-sources-2025.md`** — deep-research sweep of mineable protein-free RNA-LLPS data
-6. **`v8-richer-structure-features-null.md`** — richer intramolecular features didn't help (null result)
-7. **`v10-cleaned-corpus.md`** — corpus cleaning alone was net-negative; need to ADD non-yeast data
-8. **`v11-additions-staged.md`** — G-quadruplex additions were informative but not promotable
-9. **`ernierna-2nd-backbone.md`** — ERNIE-RNA backbone tested and rejected; the gap is a data problem, not a backbone problem
-10. **`v13-matched-pairs-closes-gap.md`** — matched-pair training pairs closed the gap; this is the production model
-
-**TL;DR for someone picking up the project**: the production model is
-RNA-FM + FEGSTrans adapter + 38-dim biophysics + matched-pair G-quadruplex
-training pairs. The matched-pair pairs are the breakthrough that closed the
-structure-specificity blind spot, after three prior approaches (richer
-features, more data volume, alternative backbone) failed to do so.
+**Architecture**: RNA-FM foundation backbone + FEGSTrans structural adapter +
+38-dim biophysics + MLP head. Trained on a strictly-curated protein-free
+RNA-LLPS corpus (≈1,400 positives, ≈700 negatives, ≈200 structural hard
+negatives) with CD-HIT cluster-grouped leakage control, organism-balanced
+sampling, and matched G-quadruplex training pairs that close the
+structure-specificity blind spot. The matched-pair pairs are the
+breakthrough — three earlier directions (richer intramolecular features, more
+data volume, alternative foundation backbone) were tried and didn't help.
 
 ---
 
 ## 7. Project state — what's done and what's pending
 
 ### Done
-- ✅ Production model trained, evaluated, frozen
-- ✅ CLI tool (score / design / validate / uncertainty / long-MIL)
+- ✅ Model trained, evaluated, frozen
+- ✅ CLI tool (score / design / validate / uncertainty)
 - ✅ One-click Colab notebook with score / GA / DEN / 2D / 3D visualization
 - ✅ Code published on GitHub (https://github.com/QuercusCode/RNAPhaseek)
 - ✅ Weights published on Hugging Face Hub

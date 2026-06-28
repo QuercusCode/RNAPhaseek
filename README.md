@@ -6,7 +6,7 @@ Predict and de-novo **design RNA that undergoes liquid–liquid phase separation
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/QuercusCode/RNAPhaseek/blob/main/notebooks/RNAPhaseek_colab.ipynb) — score sequences and design new RNAs in your browser, no install.
 
-**Production model performance** (leakage-free 5-fold cluster-grouped CV):
+**Model performance** (leakage-free 5-fold cluster-grouped CV):
 
 | Metric | Value |
 |---|---|
