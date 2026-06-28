@@ -4,11 +4,17 @@ Predict and de-novo **design RNA that undergoes liquid–liquid phase separation
 (protein-free, RNA–RNA-driven LLPS). RNA-FM foundation model + FEGS structure adapter +
 38-dim biophysics, with a genetic-algorithm / Deep-Exploration-Network generator.
 
-> **Try it now — no install needed:**
->
-> [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/QuercusCode/RNAPhaseek/blob/main/notebooks/RNAPhaseek_colab.ipynb)
->
-> **Score sequences and design new phase-separating RNAs directly in your browser.**
+<div align="center">
+
+### Try it now — no install needed
+
+<a href="https://colab.research.google.com/github/QuercusCode/RNAPhaseek/blob/main/notebooks/RNAPhaseek_colab.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" width="250">
+</a>
+
+**Score sequences and design new phase-separating RNAs directly in your browser.**
+
+</div>
 
 **Model performance** (leakage-free 5-fold cluster-grouped CV):
 
