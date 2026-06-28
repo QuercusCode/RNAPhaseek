@@ -49,12 +49,14 @@ sampling.
 | **GitHub** | All source code, the Colab notebook, manuscript draft, all docs | https://github.com/QuercusCode/RNAPhaseek |
 | **Hugging Face Hub** | Model weights (`final_model.pt`, `norm_stats.npz`) | https://huggingface.co/quercuscode/rnaphaseek |
 | **Local working dir** | Active development | `~/Documents/RNAPhaseek_scripts/` |
-| **LaCie external** | Raw corpus + precomputed features + all training checkpoints | `/Volumes/LaCie/RNAPhaseek_scripts/` |
-| **LaCie OLD backup** | Snapshot from 2026-06-12 (pre-architecture-cleanup, 503 GB) | `/Volumes/LaCie/RNAPhaseek_scripts.OLD_20260612/` |
 | **Project memory** | Per-milestone decision log | `~/.claude/projects/-Users-synbaiteam-Documents-RNAPhaseek-scripts/memory/*.md` |
 
-The exact local + LaCie file layout is documented in
-[`docs/STRUCTURE.md`](STRUCTURE.md). **Read that next** if you need the file map.
+The project is **self-contained**: cloning the repo + downloading the
+~426 MB of weights from Hugging Face is enough to run scoring, design, and
+the Colab notebook end-to-end. Heavy training-corpus archives and
+historical run dumps may live on external storage if disk space is tight
+(see [`docs/STRUCTURE.md`](STRUCTURE.md)), but they are not needed for
+inference.
 
 ---
 
@@ -172,7 +174,7 @@ data volume, alternative foundation backbone) were tried and didn't help.
 - ✅ Code published on GitHub (https://github.com/QuercusCode/RNAPhaseek)
 - ✅ Weights published on Hugging Face Hub
 - ✅ Manuscript draft (research article + cover letter) in [`docs/`](.)
-- ✅ Local + LaCie file layouts organized and documented
+- ✅ Local file layout organized and documented
 - ✅ All historical training runs + failed experiments preserved and catalogued
 
 ### Pending — manuscript (for preprint submission to bioRxiv)
@@ -214,8 +216,8 @@ See [`docs/NEXT_STEPS.md`](NEXT_STEPS.md) for the full list. Highlights:
 | Get the deep technical/scientific report | [`docs/RNAPhaseek_Comprehensive_Report.pdf`](RNAPhaseek_Comprehensive_Report.pdf) |
 | Understand the development history | The memory files at `~/.claude/projects/.../memory/` (in numbered order) |
 | See the computational backlog | [`docs/NEXT_STEPS.md`](NEXT_STEPS.md) |
-| Find a specific training checkpoint | `/Volumes/LaCie/RNAPhaseek_scripts/model/README.md` |
-| Find the corpus + features | `/Volumes/LaCie/RNAPhaseek_scripts/Data/README.md` |
+| Find a specific training checkpoint | `model/README.md` (and any external archive) |
+| Find the corpus + features | `Data/` (large archives may live externally) |
 | Re-derive any preprocessing step | The relevant `scripts/data_prep/*.py` script |
 | Train a new variant | The relevant `scripts/training/run_*.py` script |
 
