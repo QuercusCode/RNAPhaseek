@@ -8,12 +8,16 @@ Predict and de-novo **design RNA that undergoes liquid–liquid phase separation
 
 **Model performance** (leakage-free 5-fold cluster-grouped CV):
 
+<div align="center">
+
 | Metric | Value |
 |---|---|
 | Overall AUROC | **0.88** |
 | Structural-specificity AUROC | **0.90** |
 | Non-yeast generalization AUROC | **0.80** |
 | Matched-pair accuracy (held-out structure-specificity benchmark) | **1.00** |
+
+</div>
 
 ---
 
