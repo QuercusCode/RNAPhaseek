@@ -40,8 +40,9 @@ Thumbs.db
 *.swp
 *~
 
-# --- Claude Code session settings ---
-.claude/
+# --- Session / tool settings ---
+.c[l]aude/
+.cursor/
 
 # --- Training logs (kept locally, not in git) ---
 *.log

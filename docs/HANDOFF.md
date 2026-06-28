@@ -49,7 +49,7 @@ sampling.
 | **GitHub** | All source code, the Colab notebook, manuscript draft, all docs | https://github.com/QuercusCode/RNAPhaseek |
 | **Hugging Face Hub** | Model weights (`final_model.pt`, `norm_stats.npz`) | https://huggingface.co/quercuscode/rnaphaseek |
 | **Local working dir** | Active development | `~/Documents/RNAPhaseek_scripts/` |
-| **Project memory** | Per-milestone decision log | `~/.claude/projects/-Users-synbaiteam-Documents-RNAPhaseek-scripts/memory/*.md` |
+| **Project memory** | Per-milestone decision log | Local development notes (not in repo) |
 
 The project is **self-contained**: cloning the repo + downloading the
 ~426 MB of weights from Hugging Face is enough to run scoring, design, and
@@ -214,7 +214,7 @@ See [`docs/NEXT_STEPS.md`](NEXT_STEPS.md) for the full list. Highlights:
 | Read the paper draft | [`docs/RNAPhaseek_manuscript.md`](RNAPhaseek_manuscript.md) |
 | Read the cover letter | [`docs/RNAPhaseek_cover_letter.md`](RNAPhaseek_cover_letter.md) |
 | Get the deep technical/scientific report | [`docs/RNAPhaseek_Comprehensive_Report.pdf`](RNAPhaseek_Comprehensive_Report.pdf) |
-| Understand the development history | The memory files at `~/.claude/projects/.../memory/` (in numbered order) |
+| Understand the development history | Local development notes (not in repo) |
 | See the computational backlog | [`docs/NEXT_STEPS.md`](NEXT_STEPS.md) |
 | Find a specific training checkpoint | `model/README.md` (and any external archive) |
 | Find the corpus + features | `Data/` (large archives may live externally) |
